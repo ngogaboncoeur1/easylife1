@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EasyLife · Home Services</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; transition: background-color .3s, color .3s, border-color .3s; }
+
+:root {
+  --bg:#f8fafc; --bg-alt:#ffffff; --card-bg:#ffffff; --text:#0b1b2f;
+  --text-soft:#3f5568; --text-muted:#5a6f82; --border:#e2e8f0; --border-soft:#e2edf7;
+  --primary:#0d3e6b; --primary-light:#1b6bb0; --primary-hover:#1b5b8f;
+  --accent-bg:#e9f2fa; --hero-bg:linear-gradient(145deg,#ffffff 0%,#f1f7fe 100%);
+  --chat-body-bg:#f6faff; --bot-msg-bg:#e1effb; --shadow-sm:0 2px 6px rgba(0,0,0,.05);
+  --shadow-md:0 10px 25px -8px rgba(0,20,40,.1);
+  --shadow-lg:0 12px 24px -12px rgba(0,35,70,.18);
+  --shadow-hover:0 24px 32px -12px rgba(0,70,120,.25);
+}
+[data-theme="dark"] {
+  --bg:#0a1622; --bg-alt:#10202f; --card-bg:#14283a; --text:#e8f1fa;
+  --text-soft:#b8c9d9; --text-muted:#8ba3b8; --border:#1e3448; --border-soft:#1c3145;
+  --primary:#4a9de0; --primary-light:#5cb0f0; --primary-hover:#3b88c7;
+  --accent-bg:#1a3145; --hero-bg:linear-gradient(145deg,#14283a 0%,#0f2132 100%);
+  --chat-body-bg:#0f2132; --bot-msg-bg:#1c3a52;
+  --shadow-sm:0 2px 6px rgba(0,0,0,.3);
+  --shadow-md:0 10px 25px -8px rgba(0,0,0,.5);
+  --shadow-lg:0 12px 24px -12px rgba(0,0,0,.6);
+  --shadow-hover:0 24px 32px -12px rgba(0,100,180,.35);
+}
+
+body { background: var(--bg); color: var(--text); min-height: 100vh; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+
+/* HEADER */
+.main-header {
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between;
+  padding:1rem 0; border-bottom:1px solid var(--border); gap:1rem;
+  position: sticky; top:0; background: var(--bg); z-index: 500;
+}
+.logo {
+  font-size:1.6rem; font-weight:800; letter-spacing:-.5px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text; display:flex; align-items:center; gap:.4rem;
+}
+.logo i { background:none; -webkit-text-fill-color: var(--primary-light); font-size:1.8rem; }
+.nav-links { display:flex; gap:1.2rem; flex-wrap:wrap; }
+.nav-links a {
+  color: var(--text-soft); text-decoration:none; font-weight:600;
+  font-size:.95rem; padding:.4rem .2rem; border-bottom:2px solid transparent;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--primary-light); border-bottom-color: var(--primary-light); }
+.header-actions { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+.ctrl-btn {
+  background: var(--bg-alt); border:1px solid var(--border-soft); color: var(--text);
+  width:42px; height:42px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:1rem; cursor:pointer; box-shadow: var(--shadow-sm);
+}
+.ctrl-btn:hover { background: var(--accent-bg); transform: translateY(-2px); }
+.lang-select {
+  background: var(--bg-alt); border:1px solid var(--border-soft); color: var(--text);
+  height:42px; padding:0 .8rem; border-radius:30px; font-size:.9rem;
+  font-weight:600; cursor:pointer; outline:none; box-shadow: var(--shadow-sm);
+}
+.lang-select:hover { background: var(--accent-bg); }
+
+.search-box {
+  display:flex; align-items:center; background: var(--bg-alt);
+  border:1px solid var(--border-soft); border-radius:30px; padding:.25rem;
+  box-shadow: var(--shadow-sm); max-width:0; overflow:hidden; opacity:0;
+  transition: all .35s ease;
+}
+.search-box.open { max-width:280px; opacity:1; padding-left:1rem; }
+.search-box input {
+  border:none; background:transparent; outline:none; color: var(--text);
+  font-size:.95rem; width:100%; min-width:0; padding:.5rem 0;
+}
+.search-box input::placeholder { color: var(--text-muted); }
+.search-box button {
+  background: var(--primary-light); border:none; color:white; width:34px; height:34px;
+  border-radius:50%; cursor:pointer; flex-shrink:0; margin-left:.4rem;
+}
+.search-box button:hover { background: var(--primary-hover); }
+.whatsapp-icon {
+  background:#25d366; color:white; width:42px; height:42px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:1.5rem;
+  box-shadow:0 6px 12px rgba(37,211,102,.3); text-decoration:none; flex-shrink:0;
+}
+.whatsapp-icon:hover { background:#128C7E; transform: scale(1.05); }
+.login-icon {
+  background: var(--primary-light); color:white; width:42px; height:42px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+  cursor:pointer; border:none; box-shadow: var(--shadow-sm);
+}
+.login-icon:hover { background: var(--primary-hover); }
+
+/* SECTIONS */
+.section { padding: 2rem 0 1rem; }
+.section-title {
+  font-size:1.9rem; font-weight:700; margin-bottom:1.5rem;
+  display:flex; align-items:center; gap:.7rem; color: var(--text);
+}
+.section-title i { color: var(--primary-light); }
+
+/* HERO */
+.hero {
+  background: var(--hero-bg); padding:2.5rem 2rem; border-radius:32px;
+  margin-bottom:2rem; box-shadow: var(--shadow-md);
+  border:1px solid var(--border-soft); display:grid;
+  grid-template-columns: 1.2fr 1fr; gap:2rem; align-items:center;
+}
+.hero h1 { font-size:2.6rem; font-weight:800; color: var(--text); letter-spacing:-.02em; line-height:1.15; }
+.hero h1 span.hl { color: var(--primary-light); }
+.hero p { font-size:1.1rem; margin-top:1rem; color: var(--text-soft); }
+.hero-cta { display:flex; gap:.8rem; margin-top:1.5rem; flex-wrap:wrap; }
+.btn-primary, .btn-secondary {
+  padding:.85rem 1.6rem; border-radius:40px; font-weight:700; font-size:.95rem;
+  cursor:pointer; border:none; text-decoration:none; display:inline-flex;
+  align-items:center; gap:.5rem;
+}
+.btn-primary { background: var(--primary-light); color:white; }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
+.btn-secondary { background: var(--bg-alt); color: var(--text); border:1px solid var(--border-soft); }
+.btn-secondary:hover { background: var(--accent-bg); }
+.hero-img {
+  border-radius:24px; height:280px;
+  background-image: url('https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80');
+  background-size: cover; background-position: center;
+  box-shadow: var(--shadow-lg);
+}
+.badge-group { display:flex; flex-wrap:wrap; gap:.6rem; margin-top:1.2rem; }
+.badge {
+  background: var(--bg-alt); border:1px solid var(--border-soft);
+  padding:.45rem 1rem; border-radius:40px; font-weight:500; font-size:.85rem;
+  color: var(--text-soft); box-shadow: var(--shadow-sm);
+  display:flex; align-items:center; gap:.5rem;
+}
+
+/* STATS */
+.stats {
+  display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap:1rem; margin:2rem 0;
+}
+.stat {
+  background: var(--card-bg); border-radius:18px; padding:1.2rem;
+  text-align:center; border:1px solid var(--border-soft); box-shadow: var(--shadow-sm);
+}
+.stat-num { font-size:1.8rem; font-weight:800; color: var(--primary-light); }
+.stat-lbl { font-size:.85rem; color: var(--text-muted); margin-top:.3rem; }
+
+/* SERVICES */
+.job-grid {
+  display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap:1.6rem; margin-bottom:2rem;
+}
+.job-card {
+  background: var(--card-bg); border-radius:22px; overflow:hidden;
+  box-shadow: var(--shadow-lg); border:1px solid var(--border-soft);
+  display:flex; flex-direction:column; transition: all .25s ease;
+}
+.job-card:hover {
+  transform: translateY(-6px); box-shadow: var(--shadow-hover);
+  border-color: var(--primary-light);
+}
+.job-card.hidden { display:none; }
+.job-img {
+  height:170px; background-size:cover; background-position:center; position:relative;
+}
+.job-img::after {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,.35));
+}
+.job-badge {
+  position:absolute; top:.8rem; right:.8rem; background: rgba(255,255,255,.95);
+  color:#0d3e6b; padding:.35rem .8rem; border-radius:30px; font-size:.78rem;
+  font-weight:700; z-index:2; display:flex; align-items:center; gap:.3rem;
+}
+.job-body { padding: 1.3rem 1.3rem 1.4rem; display:flex; flex-direction:column; flex-grow:1; }
+.job-body h3 { font-size:1.35rem; font-weight:700; color: var(--text); margin-bottom:.35rem; }
+.job-desc { color: var(--text-soft); font-size:.92rem; line-height:1.45; margin-bottom:.9rem; flex-grow:1; }
+.price {
+  font-weight:800; color: var(--primary-light); font-size:1.05rem;
+  display:flex; align-items:center; gap:.4rem; margin-bottom:.8rem;
+}
+.price i { color:#1b8a4b; }
+.hire-btn {
+  background: var(--primary); color:white; border:none; padding:.75rem 1.1rem;
+  border-radius:30px; font-weight:700; font-size:.92rem; display:flex;
+  align-items:center; justify-content:center; gap:.5rem; cursor:pointer;
+}
+.hire-btn:hover { background: var(--primary-hover); }
+.no-results {
+  display:none; text-align:center; padding:3rem; color: var(--text-muted);
+  grid-column: 1 / -1;
+}
+.no-results.show { display:block; }
+
+/* LOGIN */
+.login-section {
+  background: var(--card-bg); border-radius:28px; padding:2.5rem;
+  box-shadow: var(--shadow-lg); border:1px solid var(--border-soft);
+  max-width: 480px; margin: 0 auto 3rem;
+}
+.login-section h2 { font-size:1.8rem; font-weight:800; text-align:center; margin-bottom:.4rem; color: var(--text); }
+.login-section p.sub { text-align:center; color: var(--text-muted); margin-bottom:1.8rem; font-size:.95rem; }
+.tabs { display:flex; background: var(--accent-bg); border-radius:30px; padding:.3rem; margin-bottom:1.6rem; }
+.tab {
+  flex:1; padding:.6rem; text-align:center; border-radius:26px; cursor:pointer;
+  font-weight:700; font-size:.9rem; color: var(--text-soft); border:none; background:transparent;
+}
+.tab.active { background: var(--primary-light); color:white; }
+.form-group { margin-bottom:1rem; }
+.form-group label { display:block; font-size:.85rem; font-weight:600; margin-bottom:.4rem; color: var(--text-soft); }
+.form-group input {
+  width:100%; padding:.85rem 1rem; border-radius:30px;
+  border:1px solid var(--border); background: var(--bg-alt);
+  color: var(--text); font-size:.95rem; outline:none;
+}
+.form-group input:focus { border-color: var(--primary-light); }
+.form-submit {
+  width:100%; padding:.95rem; border-radius:30px; border:none;
+  background: var(--primary-light); color:white; font-weight:700; font-size:1rem;
+  cursor:pointer; margin-top:.5rem;
+}
+.form-submit:hover { background: var(--primary-hover); }
+.form-msg { text-align:center; margin-top:1rem; font-size:.9rem; font-weight:600; color: var(--primary-light); min-height:1.2rem; }
+.hidden { display:none !important; }
+
+/* MAP */
+.map-wrapper {
+  background: var(--card-bg); border-radius:22px; overflow:hidden;
+  box-shadow: var(--shadow-lg); border:1px solid var(--border-soft); margin-bottom:2rem;
+}
+#map { height: 440px; width: 100%; z-index:1; background: var(--accent-bg); }
+.map-info {
+  display:flex; flex-wrap:wrap; gap:1rem; padding:1rem 1.3rem;
+  background: var(--card-bg); border-top:1px solid var(--border-soft);
+  font-size:.85rem; color: var(--text-soft);
+  align-items:center; justify-content:space-between;
+}
+.map-address { font-weight:600; }
+.map-directions { color:var(--primary-light); font-weight:700; text-decoration:none; }
+.map-directions:hover { text-decoration:underline; }
+.map-fallback { padding:1.5rem; color:var(--text-soft); }
+.map-fallback a { color:var(--primary-light); font-weight:700; }
+.custom-marker {
+  background: var(--primary-light); width:30px; height:30px;
+  border-radius:50% 50% 50% 0; transform: rotate(-45deg);
+  display:flex; align-items:center; justify-content:center;
+  border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,.3);
+}
+.custom-marker i { transform: rotate(45deg); color:white; font-size:.85rem; }
+.leaflet-popup-content-wrapper {
+  background: var(--card-bg) !important; color: var(--text) !important;
+  border-radius:14px !important; border:1px solid var(--border-soft);
+}
+.leaflet-popup-tip { background: var(--card-bg) !important; }
+.leaflet-popup-content { margin:12px 16px; font-family:inherit; font-size:.9rem; }
+.leaflet-popup-content strong { color: var(--primary-light); }
+[data-theme="dark"] .leaflet-tile {
+  filter: brightness(.75) invert(1) contrast(.9) hue-rotate(180deg) saturate(.5);
+}
+[data-theme="dark"] .leaflet-container { background: #0f2132; }
+
+/* CHATBOT */
+.chatbot-container {
+  position:fixed; bottom:2rem; right:2rem; z-index:999;
+  display:flex; flex-direction:column; align-items:flex-end;
+}
+.chat-toggle {
+  background: var(--primary-light); color:white; width:62px; height:62px;
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:1.7rem; box-shadow:0 12px 22px -6px var(--primary);
+  cursor:pointer; border:2px solid rgba(255,255,255,.3);
+}
+.chat-toggle:hover { background: var(--primary); transform: scale(1.05); }
+.chat-window {
+  width:340px; background: var(--card-bg); border-radius:22px;
+  box-shadow: var(--shadow-lg); margin-bottom:1rem; overflow:hidden;
+  border:1px solid var(--border-soft); display:none; flex-direction:column;
+}
+.chat-window.active { display:flex; }
+.chat-header {
+  background: var(--primary-light); color:white; padding:1rem 1.3rem;
+  font-weight:700; font-size:1.05rem; display:flex; align-items:center;
+  justify-content:space-between;
+}
+.chat-header span { display:flex; align-items:center; gap:.5rem; }
+.chat-close { background:transparent; border:none; color:white; cursor:pointer; font-size:1rem; }
+.chat-body {
+  padding:1.2rem; background: var(--chat-body-bg); max-height:300px;
+  overflow-y:auto; font-size:.9rem; display:flex; flex-direction:column; gap:.8rem;
+}
+.bot-message, .user-message { padding:.85rem 1.1rem; border-radius:18px; max-width:88%; line-height:1.5; }
+.bot-message {
+  background: var(--bot-msg-bg); color: var(--text);
+  border-radius:18px 18px 18px 4px; align-self:flex-start;
+}
+.bot-message strong { color: var(--primary-light); }
+.user-message {
+  background: var(--bg-alt); border:1px solid var(--border-soft);
+  border-radius:18px 18px 4px 18px; align-self:flex-end; color: var(--text);
+  font-weight:500;
+}
+.chat-footer {
+  display:flex; padding:.9rem 1rem; background: var(--card-bg);
+  border-top:1px solid var(--border-soft);
+}
+.chat-footer input {
+  flex:1; padding:.7rem 1rem; border:1px solid var(--border);
+  border-radius:30px; outline:none; font-size:.9rem;
+  background: var(--chat-body-bg); color: var(--text);
+}
+.chat-footer button {
+  background: var(--primary-light); border:none; color:white;
+  width:44px; height:44px; border-radius:50%; margin-left:.6rem;
+  cursor:pointer; font-size:1rem;
+}
+.chat-footer button:hover { background: var(--primary-hover); }
+
+/* PAYMENT */
+.payment-overlay {
+  display:none; position:fixed; inset:0; background: rgba(6,20,34,.6);
+  backdrop-filter: blur(4px); z-index:1000;
+  align-items:center; justify-content:center;
+}
+.payment-overlay.active { display:flex; }
+.payment-card {
+  background: var(--card-bg); max-width:420px; width:90%;
+  border-radius:28px; padding:2rem 1.8rem 1.8rem;
+  box-shadow: var(--shadow-lg); text-align:center;
+  border:1px solid var(--border-soft); max-height:90vh; overflow-y:auto;
+}
+.payment-card h2 { font-size:1.6rem; font-weight:800; color: var(--text); margin-bottom:.4rem; }
+.payment-card p { color: var(--text-soft); margin-bottom:1.4rem; font-size:.95rem; }
+.payment-methods { display:flex; flex-direction:column; gap:.8rem; margin:1.2rem 0 1.4rem; }
+.pay-method {
+  display:flex; align-items:center; gap:1rem; background: var(--accent-bg);
+  padding:.9rem 1.3rem; border-radius:50px; border:1px solid var(--border-soft);
+  font-weight:600; color: var(--text); font-size:1rem; cursor:pointer;
+  width:100%; text-align:left;
+}
+.pay-method:hover { background: var(--bot-msg-bg); border-color: var(--primary-light); }
+.pay-method:focus-visible, .close-payment:focus-visible {
+  outline:3px solid var(--primary-light); outline-offset:3px;
+}
+.pay-method i { font-size:1.5rem; width:34px; color: var(--primary-light); }
+.close-payment {
+  background: var(--accent-bg); border:none; padding:.75rem 1.4rem;
+  border-radius:40px; font-weight:600; color: var(--text);
+  cursor:pointer; font-size:.95rem;
+}
+.close-payment:hover { background: var(--bot-msg-bg); }
+.booked-list { display:grid; gap:1rem; }
+.booked-card {
+  background:var(--card-bg); border:1px solid var(--border-soft);
+  border-radius:16px; padding:1rem 1.2rem; box-shadow:var(--shadow-sm);
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+}
+.booked-card h3 { color:var(--text); font-size:1rem; }
+.booked-card p { color:var(--text-muted); font-size:.9rem; margin-top:.3rem; }
+.booked-card .booking-amount { color:var(--primary-light); font-weight:800; white-space:nowrap; }
+.booked-empty { color:var(--text-muted); padding:1.2rem; background:var(--card-bg); border:1px dashed var(--border); border-radius:16px; }
+.booking-status { color:#92400e !important; }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:2rem; left:50%; transform: translateX(-50%) translateY(150%);
+  background: var(--primary-light); color:white; padding:.9rem 1.5rem;
+  border-radius:40px; font-weight:600; box-shadow: var(--shadow-lg);
+  z-index:2000; transition: transform .4s ease; font-size:.95rem;
+  display:flex; align-items:center; gap:.6rem;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* FOOTER */
+.footer-note {
+  text-align:center; margin-top:2rem; padding:2rem 1rem 3rem;
+  color: var(--text-muted); font-size:.9rem; border-top:1px solid var(--border);
+}
+
+@media (max-width:900px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-img { height: 220px; }
+  .nav-links { display:none; }
+}
+@media (max-width:700px) {
+  .main-header { flex-direction:column; align-items:flex-start; }
+  .header-actions { width:100%; justify-content:flex-start; }
+  .hero h1 { font-size:1.9rem; }
+  .hero { padding:1.5rem; }
+  .chat-window { width:90vw; max-width:320px; }
+  .chatbot-container { bottom:1rem; right:1rem; }
+  #map { height: 320px; }
+  .search-box.open { max-width:100%; }
+}
+
+.admin-portal { margin-top:2rem; }
+.admin-portal .admin-login,
+.admin-portal .admin-dashboard {
+  background:var(--card-bg); border:1px solid var(--border-soft);
+  border-radius:20px; padding:clamp(1.25rem, 4vw, 2rem);
+  box-shadow:var(--shadow-md);
+}
+.admin-portal .admin-login { max-width:440px; margin:0 auto; }
+.admin-portal .admin-login h2,
+.admin-portal .admin-topbar h2 { color:var(--text); }
+.admin-portal .admin-login p { color:var(--text-muted); margin:.5rem 0 1rem; }
+.admin-portal .admin-field,
+.admin-portal .admin-search {
+  width:100%; padding:.8rem 1rem; margin:.35rem 0 .8rem;
+  color:var(--text); background:var(--bg); border:1px solid var(--border);
+  border-radius:10px; font:inherit;
+}
+.admin-portal .admin-field:focus,
+.admin-portal .admin-search:focus { outline:2px solid var(--primary-light); }
+.admin-portal .admin-login button,
+.admin-portal .admin-logout,
+.admin-portal .admin-simulate {
+  padding:.7rem 1rem; border:0; border-radius:10px; color:#fff;
+  background:var(--primary-light); font:inherit; font-weight:700; cursor:pointer;
+}
+.admin-portal .admin-login button { width:100%; }
+.admin-portal .admin-login button:hover,
+.admin-portal .admin-simulate:hover { background:var(--primary-hover); }
+.admin-portal .admin-error { min-height:1.3rem; color:#dc2626; font-size:.9rem; }
+.admin-portal .admin-demo-note { font-size:.8rem; text-align:center; }
+.admin-portal .admin-dashboard { display:none; }
+.admin-portal .admin-topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:1rem; margin-bottom:1.25rem; padding-bottom:1rem;
+  border-bottom:1px solid var(--border);
+}
+.admin-portal .admin-logout { background:#dc2626; }
+.admin-portal .admin-stats {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:1rem; margin-bottom:1.25rem;
+}
+.admin-portal .admin-stat {
+  background:var(--bg); border:1px solid var(--border-soft);
+  border-radius:14px; padding:1rem;
+}
+.admin-portal .admin-stat-label { color:var(--text-muted); font-size:.85rem; }
+.admin-portal .admin-stat-value { color:var(--primary-light); font-size:1.7rem; font-weight:800; }
+.admin-portal .admin-tabs { display:flex; gap:.5rem; margin:1rem 0; }
+.admin-portal .admin-tab {
+  padding:.65rem 1rem; color:var(--text-soft); background:var(--bg);
+  border:1px solid var(--border); border-radius:10px; cursor:pointer; font:inherit;
+}
+.admin-portal .admin-tab.active { color:#fff; background:var(--primary-light); border-color:var(--primary-light); }
+.admin-portal .admin-simulate { margin-bottom:.5rem; }
+.admin-portal .admin-table-wrap {
+  overflow-x:auto; background:var(--bg); border:1px solid var(--border-soft);
+  border-radius:12px;
+}
+.admin-portal table { width:100%; min-width:700px; border-collapse:collapse; }
+.admin-portal th, .admin-portal td {
+  padding:.75rem .85rem; border-bottom:1px solid var(--border);
+  text-align:left; color:var(--text-soft); font-size:.85rem;
+}
+.admin-portal th { color:var(--text-muted); background:var(--accent-bg); text-transform:uppercase; font-size:.72rem; }
+.admin-portal .admin-badge { padding:.2rem .55rem; border-radius:1rem; font-size:.75rem; font-weight:700; }
+.admin-portal .admin-badge.success { color:#166534; background:#dcfce7; }
+.admin-portal .admin-badge.pending { color:#92400e; background:#fef3c7; }
+.admin-portal .admin-badge.failed { color:#991b1b; background:#fee2e2; }
+.admin-portal .admin-empty { padding:2rem; text-align:center; color:var(--text-muted); }
+@media (max-width:600px) {
+  .admin-portal .admin-topbar { align-items:flex-start; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- HEADER -->
+  <header class="main-header">
+    <div class="logo"><i class="fas fa-hand-holding-heart"></i> EasyLife</div>
+
+    <nav class="nav-links">
+      <a href="#home" class="active" data-i18n="navHome">Home</a>
+      <a href="#services" data-i18n="navServices">Services</a>
+      <a href="#map-section" data-i18n="navMap">Map</a>
+      <a href="#login" data-i18n="navLogin">Login</a>
+      <a href="#adminSection">Admin</a>
+    </nav>
+
+    <div class="header-actions">
+      <div class="search-box" id="searchBox">
+        <input type="text" id="searchInput" oninput="filterJobs()">
+        <button onclick="toggleSearch()"><i class="fas fa-search"></i></button>
+      </div>
+      <button class="ctrl-btn" onclick="toggleSearch()" title="Search"><i class="fas fa-search"></i></button>
+
+      <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)">
+        <option value="en">🇬🇧 EN</option>
+        <option value="rw">🇷🇼 RW</option>
+        <option value="fr">🇫🇷 FR</option>
+      </select>
+
+      <button class="ctrl-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+        <i class="fas fa-moon"></i>
+      </button>
+
+      <button class="login-icon" onclick="scrollToLogin()" title="Login">
+        <i class="fas fa-user"></i>
+      </button>
+
+      <a href="https://wa.me/250796591210?text=Hi%20EasyLife" class="whatsapp-icon"
+         target="_blank" rel="noopener noreferrer" title="Chat with us on WhatsApp" aria-label="Chat with us on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- HOME -->
+  <section class="section" id="home">
+    <div class="hero">
+      <div>
+        <h1><span data-i18n="heroTitle1">Find a professional</span> <span class="hl" data-i18n="heroTitle2">right now.</span></h1>
+        <p data-i18n="heroSubtitle">Plumbing, cooking, electrical, cleaning — book verified workers in your area.</p>
+        <div class="hero-cta">
+          <a href="#services" class="btn-primary"><i class="fas fa-briefcase"></i> <span data-i18n="browseServices">Browse services</span></a>
+          <a href="#login" class="btn-secondary"><i class="fas fa-user-plus"></i> <span data-i18n="createAccount">Create account</span></a>
+        </div>
+        <div class="badge-group">
+          <span class="badge"><i class="fas fa-user-check"></i> <span data-i18n="badge1">Background checked</span></span>
+          <span class="badge"><i class="fas fa-clock"></i> <span data-i18n="badge2">Same-day service</span></span>
+          <span class="badge"><i class="fas fa-shield-alt"></i> <span data-i18n="badge3">Secure payment</span></span>
+        </div>
+      </div>
+      <div class="hero-img"></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-num">2,400+</div><div class="stat-lbl" data-i18n="statPros">Verified pros</div></div>
+      <div class="stat"><div class="stat-num">18k+</div><div class="stat-lbl" data-i18n="statJobs">Jobs completed</div></div>
+      <div class="stat"><div class="stat-num">4.8★</div><div class="stat-lbl" data-i18n="statRating">Average rating</div></div>
+      <div class="stat"><div class="stat-num">24/7</div><div class="stat-lbl" data-i18n="statSupport">Support</div></div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="section" id="services">
+    <h2 class="section-title"><i class="fas fa-briefcase"></i> <span data-i18n="jobsTitle">Our services</span></h2>
+
+    <div class="job-grid" id="jobGrid">
+
+      <div class="job-card" data-keywords="plumbing plumber pipe leak drain water wrench amazi">
+        <div class="job-img" style="background-image:url('https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80')">
+          <div class="job-badge"><i class="fas fa-star" style="color:#f1c40f"></i> 4.9</div>
+        </div>
+        <div class="job-body">
+          <h3 data-i18n="jobPlumbTitle">Plumbing</h3>
+          <div class="job-desc" data-i18n="jobPlumbDesc">Leaky faucets, pipe repair, drain unclogging, and fixture installation.</div>
+          <div class="price"><i class="fas fa-tag"></i> <span data-i18n="from">from</span> $45</div>
+          <button class="hire-btn" onclick="openPayment('Plumbing', 45)"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="hirePay">Hire & pay</span></button>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="cooking cook chef meal food kitchen dinner prep guteka">
+        <div class="job-img" style="background-image:url('https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80')">
+          <div class="job-badge"><i class="fas fa-star" style="color:#f1c40f"></i> 4.8</div>
+        </div>
+        <div class="job-body">
+          <h3 data-i18n="jobCookTitle">Cooking / Personal Chef</h3>
+          <div class="job-desc" data-i18n="jobCookDesc">Weekly meal prep, dinner parties, or daily cooking.</div>
+          <div class="price"><i class="fas fa-tag"></i> <span data-i18n="from">from</span> $60</div>
+          <button class="hire-btn" onclick="openPayment('Cooking', 60)"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="hirePay">Hire & pay</span></button>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="electrical electrician wiring light outlet power bolt amashanyarazi">
+        <div class="job-img" style="background-image:url('https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=800&q=80')">
+          <div class="job-badge"><i class="fas fa-star" style="color:#f1c40f"></i> 4.9</div>
+        </div>
+        <div class="job-body">
+          <h3 data-i18n="jobElecTitle">Electrical</h3>
+          <div class="job-desc" data-i18n="jobElecDesc">Lighting, outlets, breaker issues, smart home installs.</div>
+          <div class="price"><i class="fas fa-tag"></i> <span data-i18n="from">from</span> $70</div>
+          <button class="hire-btn" onclick="openPayment('Electrical', 70)"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="hirePay">Hire & pay</span></button>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="cleaning clean maid housekeeping broom tidy isuku">
+        <div class="job-img" style="background-image:url('https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80')">
+          <div class="job-badge"><i class="fas fa-star" style="color:#f1c40f"></i> 4.7</div>
+        </div>
+        <div class="job-body">
+          <h3 data-i18n="jobCleanTitle">Home Cleaning</h3>
+          <div class="job-desc" data-i18n="jobCleanDesc">Deep cleaning, move-in/out, regular housekeeping.</div>
+          <div class="price"><i class="fas fa-tag"></i> <span data-i18n="from">from</span> $35</div>
+          <button class="hire-btn" onclick="openPayment('Cleaning', 35)"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="hirePay">Hire & pay</span></button>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="handyman repair hammer assemble mount furniture">
+        <div class="job-img" style="background-image:url('https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=80')">
+          <div class="job-badge"><i class="fas fa-star" style="color:#f1c40f"></i> 4.8</div>
+        </div>
+        <div class="job-body">
+          <h3 data-i18n="jobHandyTitle">Handyman</h3>
+          <div class="job-desc" data-i18n="jobHandyDesc">Furniture assembly, wall mounting, small repairs, odd jobs.</div>
+          <div class="price"><i class="fas fa-tag"></i> <span data-i18n="from">from</span> $50</div>
+          <button class="hire-btn" onclick="openPayment('Handyman', 50)"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="hirePay">Hire & pay</span></button>
+        </div>
+      </div>
+
+      <div class="job-card" data-keywords="gardening garden lawn mow leaf plant tree trim ubusitani">
+        <div class="job-img" style="background-image:url('https://images.unsplash.com/photo-1558904541-efa843a96f01?auto=format&fit=crop&w=800&q=80')">
+          <div class="job-badge"><i class="fas fa-star" style="color:#f1c40f"></i> 4.7</div>
+        </div>
+        <div class="job-body">
+          <h3 data-i18n="jobGardenTitle">Gardening</h3>
+          <div class="job-desc" data-i18n="jobGardenDesc">Lawn care, trimming, planting, and seasonal garden upkeep.</div>
+          <div class="price"><i class="fas fa-tag"></i> <span data-i18n="from">from</span> $40</div>
+          <button class="hire-btn" onclick="openPayment('Gardening', 40)"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="hirePay">Hire & pay</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="no-results" id="noResults">No services match your search.</div>
+  </section>
+
+  <section class="section" id="bookedServices" aria-live="polite">
+    <h2 class="section-title"><i class="fas fa-clipboard-check"></i> <span data-i18n="bookedTitle">Booked services</span></h2>
+    <div class="booked-list" id="bookedServicesList">
+      <p class="booked-empty" data-i18n="bookedEmpty">Your booked services will appear here.</p>
+    </div>
+  </section>
+
+  <section class="section" id="map-section">
+    <h2 class="section-title"><i class="fas fa-map-marked-alt"></i> <span data-i18n="mapTitle">Find us in Kabuga</span></h2>
+    <div class="map-wrapper">
+      <div id="map" role="application" aria-label="Interactive map of Kabuga, Kigali, Rwanda">
+        <div class="map-fallback">
+          <span data-i18n="mapUnavailable">The interactive map could not be loaded.</span>
+          <a href="https://www.openstreetmap.org/?mlat=-1.9792935&amp;mlon=30.2248539#map=15/-1.9792935/30.2248539" target="_blank" rel="noopener noreferrer" data-i18n="mapOpenStreetMap">View Kabuga on OpenStreetMap</a>.
+        </div>
+      </div>
+      <div class="map-info">
+        <span class="map-address" data-i18n="mapAddress">Kabuga, Gasabo District, Kigali, Rwanda</span>
+        <a class="map-directions" href="https://www.google.com/maps/dir/?api=1&amp;destination=-1.9792935%2C30.2248539" target="_blank" rel="noopener noreferrer" data-i18n="mapDirections">Get directions</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="login">
+    <div class="login-section">
+      <h2 data-i18n="loginTitle">Welcome back</h2>
+      <p class="sub" data-i18n="loginSubtitle">Book trusted professionals in minutes.</p>
+      <div class="tabs">
+        <button class="tab active" type="button" data-tab="login" data-i18n="tabLogin">Login</button>
+        <button class="tab" type="button" data-tab="signup" data-i18n="tabSignup">Sign up</button>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginEmail" data-i18n="emailLabel">Email</label>
+          <input id="loginEmail" type="email" placeholder="name@example.com">
+        </div>
+        <div class="form-group">
+          <label for="loginPassword" data-i18n="passwordLabel">Password</label>
+          <input id="loginPassword" type="password" placeholder="••••••••">
+        </div>
+        <button class="form-submit" type="submit" data-i18n="loginButton">Login</button>
+        <div class="form-msg" id="loginMessage"></div>
+      </form>
+
+      <form id="signupForm" class="hidden">
+        <div class="form-group">
+          <label for="signupName" data-i18n="nameLabel">Full name</label>
+          <input id="signupName" type="text" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label for="signupEmail" data-i18n="emailLabel">Email</label>
+          <input id="signupEmail" type="email" placeholder="name@example.com">
+        </div>
+        <div class="form-group">
+          <label for="signupPassword" data-i18n="passwordLabel">Password</label>
+          <input id="signupPassword" type="password" placeholder="Create a password">
+        </div>
+        <button class="form-submit" type="submit" data-i18n="signupButton">Create account</button>
+        <div class="form-msg" id="signupMessage"></div>
+      </form>
+    </div>
+  </section>
+</div>
+
+<div class="payment-overlay" id="paymentOverlay">
+  <div class="payment-card" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
+    <h2 id="paymentTitle" data-i18n="paymentTitle">Pay for service</h2>
+    <p id="paymentSummary" data-i18n="paymentSummary">Complete your booking securely.</p>
+    <div class="payment-methods">
+      <button class="pay-method" type="button" data-payment-method="Visa"><i class="fab fa-cc-visa" aria-hidden="true"></i> Visa</button>
+      <button class="pay-method" type="button" data-payment-method="Mastercard"><i class="fab fa-cc-mastercard" aria-hidden="true"></i> Mastercard</button>
+      <button class="pay-method" type="button" data-payment-method="PayPal"><i class="fab fa-cc-paypal" aria-hidden="true"></i> PayPal</button>
+      <button class="pay-method" type="button" data-payment-method="Mobile money"><i class="fas fa-mobile-alt" aria-hidden="true"></i> Mobile money</button>
+    </div>
+    <button class="close-payment" type="button" onclick="closePayment()" data-i18n="closeBtn">Close</button>
+  </div>
+</div>
+
+<div class="chatbot-container">
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+      <span><i class="fas fa-robot"></i> EasyBot</span>
+      <button class="chat-close" type="button" aria-label="Close chat" onclick="toggleChat()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="chat-body" id="chatBody">
+      <div class="bot-message"><strong>EasyBot:</strong> Hi! I can help you find trusted local services./Muraho nagufasha gushakisha abakozi bizewe!</div>
+    </div>
+    <div class="chat-footer">
+      <input id="chatInput" type="text" placeholder="Ask about a service...">
+      <button type="button" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+  <button class="chat-toggle" type="button" aria-label="Open chat" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const translations = {
+    en: {
+      siteTitle: 'Home Services',
+      navHome: 'Home',
+      navServices: 'Services',
+      navMap: 'Map',
+      navLogin: 'Login',
+      heroTitle1: 'Find a professional',
+      heroTitle2: 'right now.',
+      heroSubtitle: 'Plumbing, cooking, electrical, cleaning — book verified workers in your area.',
+      browseServices: 'Browse services',
+      createAccount: 'Create account',
+      badge1: 'Background checked',
+      badge2: 'Same-day service',
+      badge3: 'Secure payment',
+      statPros: 'Verified pros',
+      statJobs: 'Jobs completed',
+      statRating: 'Average rating',
+      statSupport: 'Support',
+      jobsTitle: 'Our services',
+      from: 'from',
+      hirePay: 'Hire & pay',
+      jobPlumbTitle: 'Plumbing',
+      jobPlumbDesc: 'Leaky faucets, pipe repair, drain unclogging, and fixture installation.',
+      jobCookTitle: 'Cooking / Personal Chef',
+      jobCookDesc: 'Weekly meal prep, dinner parties, or daily cooking.',
+      jobElecTitle: 'Electrical',
+      jobElecDesc: 'Lighting, outlets, breaker issues, smart home installs.',
+      jobCleanTitle: 'Home Cleaning',
+      jobCleanDesc: 'Deep cleaning, move-in/out, regular housekeeping.',
+      jobHandyTitle: 'Handyman',
+      jobHandyDesc: 'Furniture assembly, wall mounting, small repairs, odd jobs.',
+      jobGardenTitle: 'Gardening',
+      jobGardenDesc: 'Lawn care, trimming, planting, and seasonal garden upkeep.',
+      mapTitle: 'Find us in Kabuga',
+      mapAddress: 'Kabuga, Gasabo District, Kigali, Rwanda',
+      mapDirections: 'Get directions',
+      mapUnavailable: 'The interactive map could not be loaded.',
+      mapOpenStreetMap: 'View Kabuga on OpenStreetMap',
+      loginTitle: 'Welcome back',
+      loginSubtitle: 'Book trusted professionals in minutes.',
+      tabLogin: 'Login',
+      tabSignup: 'Sign up',
+      emailLabel: 'Email',
+      passwordLabel: 'Password',
+      loginButton: 'Login',
+      nameLabel: 'Full name',
+      signupButton: 'Create account',
+      paymentTitle: 'Pay for service',
+      paymentSummary: 'Complete your booking securely.',
+      bookedTitle: 'Booked services',
+      bookedEmpty: 'Your booked services will appear here.',
+      bookingPending: 'Awaiting payment. Complete payment with your selected provider.',
+      bookingCreated: 'Booking added. Payment is awaiting completion.',
+      closeBtn: 'Close',
+      footerNote: '© 2026 EasyLife. Trusted home services for every day life.'
+    },
+    rw: {
+      siteTitle: 'Serivisi zo mu rugo',
+      navHome: 'Ahabanza',
+      navServices: 'Serivisi',
+      navMap: 'Ikarita',
+      navLogin: 'Injira',
+      heroTitle1: 'Shakisha',
+      heroTitle2: 'umukozi ubu.',
+      heroSubtitle: 'Amazi, gufumba, amashanyarazi, isuku — hitana abakozi bemewe hafi yawe.',
+      browseServices: 'Reba serivisi',
+      createAccount: 'Fungura konti',
+      badge1: 'Bemewe',
+      badge2: 'Serivisi ku munsi',
+      badge3: 'Ibyishyuwe byizewe',
+      statPros: 'Abakozi bemewe',
+      statJobs: 'Imirimo irangiye',
+      statRating: 'Umwunganire',
+      statSupport: 'Ubufasha',
+      jobsTitle: 'Serivisi zacu',
+      from: 'kuva',
+      hirePay: 'Koresha & wishyure',
+      jobPlumbTitle: 'Amazi',
+      jobPlumbDesc: 'Gusana amazi, guhuza amazi, no gutunganya ibikoresho byombi.',
+      jobCookTitle: 'Gufumba / Chef yihariye',
+      jobCookDesc: 'Igitabo cya buri munsi, ibiryo byihutirwa hamwe na byo.',
+      jobElecTitle: 'Amashanyarazi',
+      jobElecDesc: 'Amashanyarazi, ibyuma, ibibazo byombi, no gushyiraho ibikoresho byoroshye.',
+      jobCleanTitle: 'Isuku yo mu rugo',
+      jobCleanDesc: 'Isuku nziza, gutahura, no kubungabunga inzu.',
+      jobHandyTitle: 'Umuhanga',
+      jobHandyDesc: 'Guteranya ibikoresho, kwishyira, no gusana ibice.',
+      jobGardenTitle: 'Ubuhinzi',
+      jobGardenDesc: 'Gutera, guhinga, no kubungabunga ubusitani.',
+      mapTitle: 'Turi i Kabuga',
+      mapAddress: 'Kabuga, Akarere ka Gasabo, Kigali, Rwanda',
+      mapDirections: 'Reba inzira',
+      mapUnavailable: 'Ikarita ntishoboye gufunguka.',
+      mapOpenStreetMap: 'Reba Kabuga kuri OpenStreetMap',
+      loginTitle: 'Murakaza neza',
+      loginSubtitle: 'Gutinya abakozi bemewe mu minota.',
+      tabLogin: 'Injira',
+      tabSignup: 'Iyandikishe',
+      emailLabel: 'Imeyili',
+      passwordLabel: 'Ijambobanga',
+      loginButton: 'Injira',
+      nameLabel: 'Amazina',
+      signupButton: 'Fungura konti',
+      paymentTitle: 'Kwishyura serivisi',
+      paymentSummary: 'Kuzuza gahunda yawe yizewe.',
+      bookedTitle: 'Serivisi wahisemo',
+      bookedEmpty: 'Serivisi wahisemo zizagaragara hano.',
+      bookingPending: 'Tegereje kwishyura. Soza ubwishyu ukoresheje uburyo wahisemo.',
+      bookingCreated: 'Serivisi yongeweho. Tegereje ko ubwishyu burangira.',
+      closeBtn: 'Funga',
+      footerNote: '© 2026 EasyLife. Serivisi zizawe ku buzima bwa buri munsi.'
+    },
+    fr: {
+      siteTitle: 'Services à domicile',
+      navHome: 'Accueil',
+      navServices: 'Services',
+      navMap: 'Carte',
+      navLogin: 'Connexion',
+      heroTitle1: 'Trouvez un professionnel',
+      heroTitle2: 'immédiatement.',
+      heroSubtitle: 'Plomberie, cuisine, électricité, nettoyage — réservez des artisans vérifiés près de chez vous.',
+      browseServices: 'Voir les services',
+      createAccount: 'Créer un compte',
+      badge1: 'Contrôlé',
+      badge2: 'Service le jour même',
+      badge3: 'Paiement sécurisé',
+      statPros: 'Pros vérifiés',
+      statJobs: 'Tâches terminées',
+      statRating: 'Note moyenne',
+      statSupport: 'Support',
+      jobsTitle: 'Nos services',
+      from: 'à partir de',
+      hirePay: 'Engager & payer',
+      jobPlumbTitle: 'Plomberie',
+      jobPlumbDesc: 'Robinets, réparations de tuyaux, débouchage et installation de sanitaires.',
+      jobCookTitle: 'Cuisine / Chef personnel',
+      jobCookDesc: 'Préparation de repas, dîners et cuisine quotidienne.',
+      jobElecTitle: 'Électricité',
+      jobElecDesc: 'Éclairage, prises, pannes et installations domotiques.',
+      jobCleanTitle: 'Nettoyage maison',
+      jobCleanDesc: 'Nettoyage en profondeur, déménagement et entretien régulier.',
+      jobHandyTitle: 'Bricolage',
+      jobHandyDesc: 'Assemblage, montage mural et petites réparations.',
+      jobGardenTitle: 'Jardinage',
+      jobGardenDesc: 'Entretien du jardin, tonte, plantation et soin saisonnier.',
+      mapTitle: 'Retrouvez-nous à Kabuga',
+      mapAddress: 'Kabuga, district de Gasabo, Kigali, Rwanda',
+      mapDirections: 'Obtenir un itinéraire',
+      mapUnavailable: 'La carte interactive n’a pas pu être chargée.',
+      mapOpenStreetMap: 'Voir Kabuga sur OpenStreetMap',
+      loginTitle: 'Bon retour',
+      loginSubtitle: 'Réservez des professionnels fiables en quelques minutes.',
+      tabLogin: 'Connexion',
+      tabSignup: 'Créer compte',
+      emailLabel: 'E-mail',
+      passwordLabel: 'Mot de passe',
+      loginButton: 'Connexion',
+      nameLabel: 'Nom complet',
+      signupButton: 'Créer un compte',
+      paymentTitle: 'Payer le service',
+      paymentSummary: 'Complétez votre réservation en toute sécurité.',
+      bookedTitle: 'Services réservés',
+      bookedEmpty: 'Vos services réservés apparaîtront ici.',
+      bookingPending: 'En attente de paiement. Terminez le paiement avec le fournisseur choisi.',
+      bookingCreated: 'Réservation ajoutée. En attente de finalisation du paiement.',
+      closeBtn: 'Fermer',
+      footerNote: '© 2026 EasyLife. Des services à domicile fiables pour chaque jour.'
+    }
+  };
+
+  function applyTranslations(lang) {
+    const locale = translations[lang] || translations.en;
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach((node) => {
+      const key = node.getAttribute('data-i18n');
+      if (locale[key]) {
+        node.textContent = locale[key];
+      }
+    });
+    const langSelect = document.getElementById('langSelect');
+    if (langSelect) langSelect.value = lang;
+    document.title = `EasyLife · ${locale.siteTitle || 'Home Services'}`;
+  }
+
+  function changeLanguage(lang) {
+    if (!translations[lang]) lang = 'en';
+    localStorage.setItem('easyLifeLang', lang);
+    applyTranslations(lang);
+    renderBookedServices();
+  }
+
+  function setTheme(theme, persist = true) {
+    const nextTheme = theme === 'dark' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+      themeToggle.innerHTML = nextTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+      themeToggle.setAttribute('title', nextTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    }
+    if (persist) localStorage.setItem('easyLifeTheme', nextTheme);
+  }
+
+  function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+  }
+
+  function toggleSearch() {
+    const searchBox = document.getElementById('searchBox');
+    if (searchBox) {
+      searchBox.classList.toggle('open');
+      const input = document.getElementById('searchInput');
+      if (searchBox.classList.contains('open')) {
+        setTimeout(() => input && input.focus(), 100);
+      }
+    }
+  }
+
+  function filterJobs() {
+    const searchTerm = document.getElementById('searchInput')?.value.trim().toLowerCase() || '';
+    const cards = document.querySelectorAll('.job-card');
+    let matchFound = false;
+
+    cards.forEach((card) => {
+      const keywords = (card.getAttribute('data-keywords') || '').toLowerCase();
+      const match = !searchTerm || keywords.includes(searchTerm);
+      card.classList.toggle('hidden', !match);
+      if (match) matchFound = true;
+    });
+
+    const noResults = document.getElementById('noResults');
+    if (noResults) {
+      noResults.classList.toggle('show', !matchFound && !!searchTerm);
+    }
+  }
+
+  function scrollToLogin() {
+    document.getElementById('login')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  let currentPayment = null;
+
+  function openPayment(serviceName, amount) {
+    currentPayment = { serviceName, amount };
+    const summary = document.getElementById('paymentSummary');
+    if (summary) summary.textContent = `${serviceName} — $${amount}`;
+    document.getElementById('paymentOverlay')?.classList.add('active');
+  }
+
+  function closePayment() {
+    document.getElementById('paymentOverlay')?.classList.remove('active');
+  }
+
+  function getBookings() {
+    const storedBookings = JSON.parse(localStorage.getItem('easyLifeBookings') || '[]');
+    return Array.isArray(storedBookings) ? storedBookings : [];
+  }
+
+  function renderBookedServices() {
+    const list = document.getElementById('bookedServicesList');
+    if (!list) return;
+
+    const bookings = getBookings();
+    list.replaceChildren();
+    if (bookings.length === 0) {
+      const emptyMessage = document.createElement('p');
+      emptyMessage.className = 'booked-empty';
+      emptyMessage.dataset.i18n = 'bookedEmpty';
+      emptyMessage.textContent = (translations[document.documentElement.lang] || translations.en).bookedEmpty;
+      list.appendChild(emptyMessage);
+      return;
+    }
+
+    const locale = translations[document.documentElement.lang] || translations.en;
+    bookings.slice().reverse().forEach((booking) => {
+      const card = document.createElement('article');
+      card.className = 'booked-card';
+
+      const details = document.createElement('div');
+      const title = document.createElement('h3');
+      title.textContent = booking.serviceName;
+      const payment = document.createElement('p');
+      payment.textContent = `${booking.paymentMethod} · ${new Date(booking.date).toLocaleString()}`;
+      const status = document.createElement('p');
+      status.className = 'booking-status';
+      status.textContent = locale.bookingPending;
+      details.append(title, payment, status);
+
+      const amount = document.createElement('span');
+      amount.className = 'booking-amount';
+      amount.textContent = `$${booking.amount}`;
+      card.append(details, amount);
+      list.appendChild(card);
+    });
+  }
+
+  function completeBooking(paymentMethod) {
+    if (!currentPayment) return;
+
+    const bookings = getBookings();
+    bookings.push({
+      serviceName: currentPayment.serviceName,
+      amount: currentPayment.amount,
+      paymentMethod,
+      date: new Date().toISOString()
+    });
+    localStorage.setItem('easyLifeBookings', JSON.stringify(bookings));
+
+    currentPayment = null;
+    closePayment();
+    renderBookedServices();
+    document.getElementById('bookedServices')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showToast((translations[document.documentElement.lang] || translations.en).bookingCreated);
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  function toggleChat() {
+    const chatWindow = document.getElementById('chatWindow');
+    if (chatWindow) chatWindow.classList.toggle('active');
+  }
+
+  function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const chatBody = document.getElementById('chatBody');
+    if (!input || !chatBody) return;
+
+    const message = input.value.trim();
+    if (!message) return;
+
+    const userMessage = document.createElement('div');
+    userMessage.className = 'user-message';
+    userMessage.textContent = message;
+    chatBody.appendChild(userMessage);
+
+    const reply = document.createElement('div');
+    reply.className = 'bot-message';
+    reply.innerHTML = '<strong>EasyBot:</strong> We can help with that. Please choose a service from our list and we will match a trusted pro.';
+    chatBody.appendChild(reply);
+
+    input.value = '';
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  function initializeMap() {
+    const mapElement = document.getElementById('map');
+    if (!mapElement || typeof L === 'undefined') return;
+
+    const kabuga = [-1.9792935, 30.2248539];
+    const map = L.map(mapElement, { scrollWheelZoom: false }).setView(kabuga, 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    L.marker(kabuga)
+      .addTo(map)
+      .bindPopup('<strong>Kabuga</strong><br>Kigali, Rwanda')
+      .openPopup();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('easyLifeTheme') || 'light';
+    const savedLang = localStorage.getItem('easyLifeLang') || 'en';
+    setTheme(savedTheme, false);
+    applyTranslations(savedLang);
+    renderBookedServices();
+    initializeMap();
+
+    document.querySelectorAll('.pay-method[data-payment-method]').forEach((button) => {
+      button.addEventListener('click', () => completeBooking(button.dataset.paymentMethod));
+    });
+    document.getElementById('paymentOverlay')?.addEventListener('click', (event) => {
+      if (event.target === event.currentTarget) closePayment();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closePayment();
+    });
+
+    const loginLinks = document.querySelectorAll('#login .tabs [data-tab]');
+    loginLinks.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const selectedTab = tab.dataset.tab;
+        document.querySelectorAll('#login .tabs .tab').forEach((btn) => btn.classList.toggle('active', btn === tab));
+        document.getElementById('loginForm')?.classList.toggle('hidden', selectedTab !== 'login');
+        document.getElementById('signupForm')?.classList.toggle('hidden', selectedTab !== 'signup');
+      });
+    });
+
+    document.getElementById('loginForm')?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const message = document.getElementById('loginMessage');
+      if (message) {
+        message.textContent = 'Login request sent successfully.';
+      }
+      showToast('Welcome back!');
+    });
+
+    document.getElementById('signupForm')?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const message = document.getElementById('signupMessage');
+      if (message) {
+        message.textContent = 'Account created successfully.';
+      }
+      showToast('Account created!');
+    });
+
+    document.getElementById('chatInput')?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') sendChatMessage();
+    });
+  });
+</script>
+
+<div class="container">
+<section class="section admin-portal" id="adminSection">
+  <h2 class="section-title"><i class="fas fa-user-shield"></i> Admin Portal</h2>
+  <div class="admin-login" id="adminLoginScreen">
+    <h2>Admin Login</h2>
+    <p>Sign in to view dashboard activity.</p>
+    <form onsubmit="event.preventDefault(); adminLogin()">
+      <input class="admin-field" type="text" id="adminUser" placeholder="Username" autocomplete="username" required />
+      <input class="admin-field" type="password" id="adminPass" placeholder="Password" autocomplete="current-password" required />
+      <button type="submit">Login</button>
+    </form>
+    <div class="admin-error" id="adminLoginError" role="alert"></div>
+    <p class="admin-demo-note">Demo credentials: <b>admin</b> / <b>admin123</b></p>
+  </div>
+
+  <div class="admin-dashboard" id="adminDashboard">
+    <div class="admin-topbar">
+      <h2>Dashboard</h2>
+      <button class="admin-logout" type="button" onclick="adminLogout()">Logout</button>
+    </div>
+    <div class="admin-stats">
+      <div class="admin-stat"><div class="admin-stat-label">Total Logins</div><div class="admin-stat-value" id="statLogins">0</div></div>
+      <div class="admin-stat"><div class="admin-stat-label">Unique Users</div><div class="admin-stat-value" id="statUsers">0</div></div>
+      <div class="admin-stat"><div class="admin-stat-label">Jobs Purchased</div><div class="admin-stat-value" id="statJobs">0</div></div>
+      <div class="admin-stat"><div class="admin-stat-label">Total Revenue</div><div class="admin-stat-value" id="statRevenue">$0</div></div>
+    </div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" type="button" data-admin-tab="logins" onclick="switchAdminTab('logins')">User Logins</button>
+      <button class="admin-tab" type="button" data-admin-tab="jobs" onclick="switchAdminTab('jobs')">Job Purchases</button>
+    </div>
+    <button class="admin-simulate" type="button" onclick="simulateData()">Simulate New Activity</button>
+    <input type="search" class="admin-search" id="adminSearchBar" placeholder="Search activity..." oninput="renderAdminDashboard()" />
+    <div class="admin-table-wrap" id="adminLoginsTable">
+      <table>
+        <thead><tr><th>#</th><th>Name</th><th>Email</th><th>IP Address</th><th>Device</th><th>Location</th><th>Time</th><th>Status</th></tr></thead>
+        <tbody id="loginsBody"></tbody>
+      </table>
+    </div>
+    <div class="admin-table-wrap" id="adminJobsTable" hidden>
+      <table>
+        <thead><tr><th>#</th><th>Buyer</th><th>Email</th><th>Job Title</th><th>Amount</th><th>Payment</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody id="jobsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== -->
+<!-- ⚙️ ADMIN LOGIC                 -->
+<!-- ============================== -->
+<script>
+/* ---------- CONFIG ---------- */
+const ADMIN_CREDENTIALS = { username: "admin", password: "admin123" };
+
+/* ---------- STORAGE ---------- */
+const DB = {
+  get: (key) => JSON.parse(localStorage.getItem(key) || "[]"),
+  set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
+};
+
+/* ---------- ADMIN LOGIN ---------- */
+function adminLogin() {
+  const u = document.getElementById("adminUser").value.trim();
+  const p = document.getElementById("adminPass").value.trim();
+  const err = document.getElementById("adminLoginError");
+
+  if (u === ADMIN_CREDENTIALS.username && p === ADMIN_CREDENTIALS.password) {
+    sessionStorage.setItem("easyLifeAdminLoggedIn", "true");
+    err.textContent = "";
+    showDashboard();
+  } else {
+    err.textContent = "❌ Invalid username or password";
+  }
+}
+
+function adminLogout() {
+  sessionStorage.removeItem("easyLifeAdminLoggedIn");
+  document.getElementById("adminDashboard").style.display = "none";
+  document.getElementById("adminLoginScreen").style.display = "block";
+  document.getElementById("adminPass").value = "";
+}
+
+function showDashboard() {
+  document.getElementById("adminLoginScreen").style.display = "none";
+  document.getElementById("adminDashboard").style.display = "block";
+  loadSeedData();
+  renderAdminDashboard();
+}
+
+/* ---------- AUTO-LOGIN CHECK ---------- */
+window.addEventListener("DOMContentLoaded", () => {
+  if (sessionStorage.getItem("easyLifeAdminLoggedIn") === "true") {
+    showDashboard();
+  }
+});
+
+/* ---------- TABS ---------- */
+function switchAdminTab(tab) {
+  document.querySelectorAll("#adminSection .admin-tab").forEach(button => {
+    button.classList.toggle("active", button.dataset.adminTab === tab);
+  });
+  document.getElementById("adminLoginsTable").hidden = tab !== "logins";
+  document.getElementById("adminJobsTable").hidden = tab !== "jobs";
+}
+
+/* ---------- SEED DEMO DATA ---------- */
+function loadSeedData() {
+  if (DB.get("logins").length === 0) {
+    DB.set("logins", [
+      { name: "John Doe",    email: "john@mail.com",  ip: "192.168.1.10",  device: "Chrome / Windows", location: "New York, US",   time: new Date(Date.now() - 3600000).toISOString(),  status: "success" },
+      { name: "Sara Khan",   email: "sara@mail.com",  ip: "192.168.1.22",  device: "Safari / iPhone",  location: "London, UK",     time: new Date(Date.now() - 7200000).toISOString(),  status: "success" },
+      { name: "Mike Ross",   email: "mike@mail.com",  ip: "192.168.1.45",  device: "Firefox / Mac",    location: "Toronto, CA",    time: new Date(Date.now() - 10800000).toISOString(), status: "failed"  },
+    ]);
+  }
+  if (DB.get("jobs").length === 0) {
+    DB.set("jobs", [
+      { buyer: "John Doe",  email: "john@mail.com",  title: "Logo Design",       amount: 150, payment: "Credit Card", date: new Date(Date.now() - 3600000).toISOString(),  status: "success" },
+      { buyer: "Sara Khan", email: "sara@mail.com",  title: "Website Redesign",  amount: 800, payment: "PayPal",      date: new Date(Date.now() - 7200000).toISOString(),  status: "success" },
+      { buyer: "Ali Raza",  email: "ali@mail.com",   title: "SEO Optimization",  amount: 300, payment: "Stripe",      date: new Date(Date.now() - 14400000).toISOString(), status: "pending" },
+    ]);
+  }
+}
+
+/* ---------- SIMULATE NEW ACTIVITY ---------- */
+function simulateData() {
+  const names = ["Emma W.", "Liam B.", "Noah K.", "Olivia M.", "Ava P.", "Ethan L."];
+  const jobs  = ["Banner Design", "App Development", "Content Writing", "Video Editing", "Data Entry"];
+  const pays  = ["Credit Card", "PayPal", "Stripe", "Crypto"];
+  const devs  = ["Chrome / Windows", "Safari / iPhone", "Firefox / Mac", "Edge / Windows"];
+  const locs  = ["Berlin, DE", "Paris, FR", "Dubai, AE", "Sydney, AU", "Delhi, IN"];
+
+  const rnd = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const name = rnd(names);
+  const email = name.toLowerCase().replace(/[^a-z]/g, "") + "@mail.com";
+
+  // Add login
+  const logins = DB.get("logins");
+  logins.unshift({
+    name, email,
+    ip: `192.168.1.${Math.floor(Math.random() * 255)}`,
+    device: rnd(devs), location: rnd(locs),
+    time: new Date().toISOString(),
+    status: Math.random() > 0.15 ? "success" : "failed",
+  });
+  DB.set("logins", logins);
+
+  // 60% chance they also bought a job
+  if (Math.random() > 0.4) {
+    const jobsArr = DB.get("jobs");
+    jobsArr.unshift({
+      buyer: name, email,
+      title: rnd(jobs),
+      amount: Math.floor(Math.random() * 900) + 50,
+      payment: rnd(pays),
+      date: new Date().toISOString(),
+      status: Math.random() > 0.25 ? "success" : "pending",
+    });
+    DB.set("jobs", jobsArr);
+  }
+
+  renderAdminDashboard();
+}
+
+/* ---------- RENDER EVERYTHING ---------- */
+function escapeAdminHtml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[char]);
+}
+
+function renderAdminDashboard() {
+  const query = document.getElementById("adminSearchBar").value.toLowerCase();
+
+  const logins = DB.get("logins").filter(l =>
+    !query || [l.name, l.email, l.ip, l.device, l.location].join(" ").toLowerCase().includes(query)
+  );
+
+  const jobs = DB.get("jobs").filter(j =>
+    !query || [j.buyer, j.email, j.title, j.payment].join(" ").toLowerCase().includes(query)
+  );
+
+  // Logins table
+  document.getElementById("loginsBody").innerHTML = logins.length
+    ? logins.map((l, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${escapeAdminHtml(l.name)}</td>
+        <td>${escapeAdminHtml(l.email)}</td>
+        <td>${escapeAdminHtml(l.ip)}</td>
+        <td>${escapeAdminHtml(l.device)}</td>
+        <td>${escapeAdminHtml(l.location)}</td>
+        <td>${new Date(l.time).toLocaleString()}</td>
+        <td><span class="admin-badge ${escapeAdminHtml(l.status)}">${escapeAdminHtml(l.status)}</span></td>
+      </tr>`).join("")
+    : `<tr><td colspan="8" class="admin-empty">No logins found</td></tr>`;
+
+  // Jobs table
+  document.getElementById("jobsBody").innerHTML = jobs.length
+    ? jobs.map((j, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${escapeAdminHtml(j.buyer)}</td>
+        <td>${escapeAdminHtml(j.email)}</td>
+        <td>${escapeAdminHtml(j.title)}</td>
+        <td>$${j.amount}</td>
+        <td>${escapeAdminHtml(j.payment)}</td>
+        <td>${new Date(j.date).toLocaleString()}</td>
+        <td><span class="admin-badge ${escapeAdminHtml(j.status)}">${escapeAdminHtml(j.status)}</span></td>
+      </tr>`).join("")
+    : `<tr><td colspan="8" class="admin-empty">No jobs found</td></tr>`;
+
+  // Stats
+  const allLogins = DB.get("logins");
+  const allJobs   = DB.get("jobs");
+  document.getElementById("statLogins").textContent  = allLogins.length;
+  document.getElementById("statUsers").textContent   = new Set(allLogins.map(l => l.email)).size;
+  document.getElementById("statJobs").textContent    = allJobs.length;
+  document.getElementById("statRevenue").textContent = "$" + allJobs
+    .filter(j => j.status === "success")
+    .reduce((sum, j) => sum + j.amount, 0);
+}
+</script>
+<div class="footer-note" data-i18n="footerNote">© 2026 EasyLife. Trusted home services for every day life.</div>
+</div>
+</body>
+</html>
