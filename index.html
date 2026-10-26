@@ -1368,6 +1368,106 @@ function renderAdminDashboard() {
     .filter(j => j.status === "success")
     .reduce((sum, j) => sum + j.amount, 0);
 }
+  <script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/esm/index.js";
+
+  const supabaseUrl = "YOUR_SUPABASE_URL";
+  const supabaseAnonKey = "YOUR_SUPABASE_ANON_KEY";
+
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+  async function saveLoginEvent(userId, eventType) {
+    const { error } = await supabase
+      .from("login_events")
+      .insert([
+        { user_id: userId, event_type: eventType }
+      ]);
+
+    if (error) {
+      console.error("Error saving event:", error);
+      return false;
+    }
+
+    return true;
+  }
+
+  async function signUp(email, password) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    if (data?.user) {
+      await saveLoginEvent(data.user.id, "signup");
+    }
+
+    return { data, error: null };
+  }
+
+  async function signIn(email, password) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    if (data?.user) {
+      await saveLoginEvent(data.user.id, "login");
+    }
+
+    return { data, error: null };
+  }
+
+  // Example form handling
+  document.addEventListener("DOMContentLoaded", () => {
+    const signupForm = document.getElementById("signup-form");
+    const loginForm = document.getElementById("login-form");
+    const messageBox = document.getElementById("message");
+
+    if (signupForm) {
+      signupForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById("signup-email").value;
+        const password = document.getElementById("signup-password").value;
+
+        const result = await signUp(email, password);
+
+        if (result.error) {
+          messageBox.textContent = "Sign up failed: " + result.error.message;
+          return;
+        }
+
+        messageBox.textContent = "Sign up successful! User saved to Supabase Auth.";
+      });
+    }
+
+    if (loginForm) {
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-password").value;
+
+        const result = await signIn(email, password);
+
+        if (result.error) {
+          messageBox.textContent = "Login failed: " + result.error.message;
+          return;
+        }
+
+        messageBox.textContent = "Login successful! Login event saved to Supabase.";
+      });
+    }
+  });
+</script>
 </script>
 <div class="footer-note" data-i18n="footerNote">© 2026 EasyLife. Trusted home services for every day life.</div>
 </div>
