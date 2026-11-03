@@ -10,6 +10,7 @@
 * { margin:0; padding:0; box-sizing:border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; transition: background-color .3s, color .3s, border-color .3s; }
 
 :root {
+  color-scheme:light;
   --bg:#f8fafc; --bg-alt:#ffffff; --card-bg:#ffffff; --text:#0b1b2f;
   --text-soft:#3f5568; --text-muted:#5a6f82; --border:#e2e8f0; --border-soft:#e2edf7;
   --primary:#0d3e6b; --primary-light:#1b6bb0; --primary-hover:#1b5b8f;
@@ -18,17 +19,38 @@
   --shadow-md:0 10px 25px -8px rgba(0,20,40,.1);
   --shadow-lg:0 12px 24px -12px rgba(0,35,70,.18);
   --shadow-hover:0 24px 32px -12px rgba(0,70,120,.25);
+  --badge-bg:rgba(255,255,255,.95); --badge-text:#0d3e6b;
+  --success-text:#166534; --success-bg:#dcfce7;
+  --warning-text:#92400e; --warning-bg:#fef3c7;
+  --danger-text:#991b1b; --danger-bg:#fee2e2; --error-text:#dc2626;
+}
+[data-theme="bright"] {
+  color-scheme:light;
+  --bg:#eaf3fb; --bg-alt:#f6fbff; --card-bg:#ffffff; --text:#10283c;
+  --text-soft:#344f65; --text-muted:#526b80; --border:#cadceb; --border-soft:#d8e7f3;
+  --primary:#164a72; --primary-light:#287caf; --primary-hover:#1c648f;
+  --accent-bg:#dcecf8; --hero-bg:linear-gradient(145deg,#f8fcff 0%,#dcecf8 100%);
+  --chat-body-bg:#f0f7fc; --bot-msg-bg:#dcecf8;
+  --shadow-sm:0 2px 6px rgba(12,45,70,.06);
+  --shadow-md:0 10px 25px -8px rgba(12,45,70,.12);
+  --shadow-lg:0 12px 24px -12px rgba(12,45,70,.2);
+  --shadow-hover:0 24px 32px -12px rgba(12,65,100,.25);
 }
 [data-theme="dark"] {
-  --bg:#0a1622; --bg-alt:#10202f; --card-bg:#14283a; --text:#e8f1fa;
-  --text-soft:#b8c9d9; --text-muted:#8ba3b8; --border:#1e3448; --border-soft:#1c3145;
-  --primary:#4a9de0; --primary-light:#5cb0f0; --primary-hover:#3b88c7;
-  --accent-bg:#1a3145; --hero-bg:linear-gradient(145deg,#14283a 0%,#0f2132 100%);
-  --chat-body-bg:#0f2132; --bot-msg-bg:#1c3a52;
-  --shadow-sm:0 2px 6px rgba(0,0,0,.3);
-  --shadow-md:0 10px 25px -8px rgba(0,0,0,.5);
-  --shadow-lg:0 12px 24px -12px rgba(0,0,0,.6);
-  --shadow-hover:0 24px 32px -12px rgba(0,100,180,.35);
+  color-scheme:dark;
+  --bg:#000000; --bg-alt:#080808; --card-bg:#101010; --text:#f5f5f5;
+  --text-soft:#d0d0d0; --text-muted:#a3a3a3; --border:#292929; --border-soft:#222222;
+  --primary:#83c8f5; --primary-light:#91d1ff; --primary-hover:#61b4eb;
+  --accent-bg:#191919; --hero-bg:linear-gradient(145deg,#101010 0%,#000000 100%);
+  --chat-body-bg:#080808; --bot-msg-bg:#1b1b1b;
+  --shadow-sm:0 2px 6px rgba(0,0,0,.55);
+  --shadow-md:0 10px 25px -8px rgba(0,0,0,.75);
+  --shadow-lg:0 12px 24px -12px rgba(0,0,0,.85);
+  --shadow-hover:0 24px 32px -12px rgba(0,0,0,.9);
+  --badge-bg:rgba(16,16,16,.96); --badge-text:#f5f5f5;
+  --success-text:#86efac; --success-bg:#052e16;
+  --warning-text:#fcd34d; --warning-bg:#422006;
+  --danger-text:#fca5a5; --danger-bg:#450a0a; --error-text:#f87171;
 }
 
 body { background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -90,6 +112,65 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   box-shadow:0 6px 12px rgba(37,211,102,.3); text-decoration:none; flex-shrink:0;
 }
 .whatsapp-icon:hover { background:#128C7E; transform: scale(1.05); }
+.bookings-widget { position:relative; flex-shrink:0; }
+.bookings-toggle {
+  position:relative; width:42px; height:42px; border:1px solid var(--border-soft);
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--bg-alt); color:var(--primary-light); font-size:1.05rem;
+  cursor:pointer; box-shadow:var(--shadow-sm);
+}
+.bookings-toggle:hover, .bookings-toggle[aria-expanded="true"] { background:var(--accent-bg); }
+.bookings-toggle:focus-visible, .bookings-checkout:focus-visible,
+.bookings-close:focus-visible, .checkout-back:focus-visible {
+  outline:3px solid var(--primary-light); outline-offset:3px;
+}
+.bookings-count {
+  position:absolute; top:-5px; right:-5px; min-width:19px; height:19px;
+  padding:0 .25rem; border-radius:20px; display:flex; align-items:center;
+  justify-content:center; background:#dc2626; color:#fff; font-size:.68rem;
+  font-weight:800; border:2px solid var(--bg);
+}
+.bookings-count[hidden] { display:none; }
+.bookings-panel {
+  display:none; position:absolute; z-index:700; top:calc(100% + .65rem);
+  right:0; width:min(360px, calc(100vw - 2rem)); padding:1rem;
+  background:var(--card-bg); color:var(--text); border:1px solid var(--border-soft);
+  border-radius:18px; box-shadow:var(--shadow-lg);
+}
+.bookings-panel.open { display:block; }
+.bookings-panel-header, .bookings-panel-footer {
+  display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+}
+.bookings-panel-header { padding-bottom:.75rem; border-bottom:1px solid var(--border); }
+.bookings-panel-header h2 { font-size:1rem; color:var(--text); }
+.bookings-close {
+  width:32px; height:32px; border:0; border-radius:50%;
+  background:var(--accent-bg); color:var(--text); cursor:pointer;
+}
+.bookings-panel-list {
+  list-style:none; display:grid; gap:.6rem; padding:.75rem 0;
+  max-height:240px; overflow-y:auto;
+}
+.bookings-panel-item {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  gap:.75rem; padding:.65rem .75rem; border-radius:12px;
+  background:var(--bg); border:1px solid var(--border-soft);
+}
+.bookings-panel-item strong { display:block; color:var(--text); font-size:.88rem; }
+.bookings-panel-item span { display:block; margin-top:.2rem; color:var(--text-muted); font-size:.76rem; }
+.bookings-panel-item .bookings-item-amount {
+  color:var(--primary-light); font-weight:800; white-space:nowrap; font-size:.88rem;
+}
+.bookings-panel-empty { padding:.75rem 0; color:var(--text-muted); font-size:.88rem; }
+.bookings-panel-footer { padding-top:.75rem; border-top:1px solid var(--border); }
+.bookings-total { color:var(--text); font-weight:800; white-space:nowrap; }
+.bookings-checkout {
+  border:0; border-radius:24px; padding:.65rem .85rem;
+  background:var(--primary-light); color:#fff; font:inherit; font-size:.82rem;
+  font-weight:700; cursor:pointer;
+}
+.bookings-checkout:hover:not(:disabled) { background:var(--primary-hover); }
+.bookings-checkout:disabled { opacity:.55; cursor:not-allowed; }
 .login-icon {
   background: var(--primary-light); color:white; width:42px; height:42px; border-radius:50%;
   display:flex; align-items:center; justify-content:center; font-size:1.1rem;
@@ -174,8 +255,8 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,.35));
 }
 .job-badge {
-  position:absolute; top:.8rem; right:.8rem; background: rgba(255,255,255,.95);
-  color:#0d3e6b; padding:.35rem .8rem; border-radius:30px; font-size:.78rem;
+  position:absolute; top:.8rem; right:.8rem; background:var(--badge-bg);
+  color:var(--badge-text); padding:.35rem .8rem; border-radius:30px; font-size:.78rem;
   font-weight:700; z-index:2; display:flex; align-items:center; gap:.3rem;
 }
 .job-body { padding: 1.3rem 1.3rem 1.4rem; display:flex; flex-direction:column; flex-grow:1; }
@@ -185,7 +266,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   font-weight:800; color: var(--primary-light); font-size:1.05rem;
   display:flex; align-items:center; gap:.4rem; margin-bottom:.8rem;
 }
-.price i { color:#1b8a4b; }
+.price i { color:var(--success-text); }
 .hire-btn {
   background: var(--primary); color:white; border:none; padding:.75rem 1.1rem;
   border-radius:30px; font-weight:700; font-size:.92rem; display:flex;
@@ -261,9 +342,9 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .leaflet-popup-content { margin:12px 16px; font-family:inherit; font-size:.9rem; }
 .leaflet-popup-content strong { color: var(--primary-light); }
 [data-theme="dark"] .leaflet-tile {
-  filter: brightness(.75) invert(1) contrast(.9) hue-rotate(180deg) saturate(.5);
+  filter: brightness(.7) invert(1) contrast(.9) saturate(0);
 }
-[data-theme="dark"] .leaflet-container { background: #0f2132; }
+[data-theme="dark"] .leaflet-container { background: #000000; }
 
 /* CHATBOT */
 .chatbot-container {
@@ -279,7 +360,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .chat-toggle:hover { background: var(--primary); transform: scale(1.05); }
 .chat-window {
   width:340px; background: var(--card-bg); border-radius:22px;
-  box-shadow: var(--shadow-lg); margin-bottom:1rem; overflow:hidden;
+  box-shadow: var(--shadow-lg); margin-bottom:1rem; overflow:hidden; max-height:82vh;
   border:1px solid var(--border-soft); display:none; flex-direction:column;
 }
 .chat-window.active { display:flex; }
@@ -291,15 +372,26 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .chat-header span { display:flex; align-items:center; gap:.5rem; }
 .chat-close { background:transparent; border:none; color:white; cursor:pointer; font-size:1rem; }
 .chat-body {
-  padding:1.2rem; background: var(--chat-body-bg); max-height:300px;
+  padding:1.2rem; background: var(--chat-body-bg); max-height:min(400px, 55vh);
   overflow-y:auto; font-size:.9rem; display:flex; flex-direction:column; gap:.8rem;
 }
 .bot-message, .user-message { padding:.85rem 1.1rem; border-radius:18px; max-width:88%; line-height:1.5; }
 .bot-message {
   background: var(--bot-msg-bg); color: var(--text);
-  border-radius:18px 18px 18px 4px; align-self:flex-start;
+  border-radius:18px 18px 18px 4px; align-self:flex-start; white-space:pre-line;
 }
 .bot-message strong { color: var(--primary-light); }
+.chat-options { display:flex; flex-wrap:wrap; gap:.45rem; max-width:96%; align-self:flex-start; }
+.chat-option {
+  border:1px solid var(--border-soft); border-radius:18px; padding:.5rem .75rem;
+  background:var(--card-bg); color:var(--primary-light); font:inherit; font-size:.82rem;
+  font-weight:650; text-align:left; cursor:pointer;
+}
+.chat-option:hover { background:var(--accent-bg); border-color:var(--primary-light); }
+.chat-option:focus-visible, .chat-close:focus-visible, .chat-toggle:focus-visible,
+.chat-footer button:focus-visible { outline:3px solid var(--primary-light); outline-offset:3px; }
+.chat-status { color:rgba(255,255,255,.85); font-size:.75rem; font-weight:400; margin-left:1.65rem; }
+.chat-robot { font-size:1.3rem; line-height:1; }
 .user-message {
   background: var(--bg-alt); border:1px solid var(--border-soft);
   border-radius:18px 18px 4px 18px; align-self:flex-end; color: var(--text);
@@ -327,6 +419,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   backdrop-filter: blur(4px); z-index:1000;
   align-items:center; justify-content:center;
 }
+[data-theme="dark"] .payment-overlay { background:rgba(0,0,0,.82); }
 .payment-overlay.active { display:flex; }
 .payment-card {
   background: var(--card-bg); max-width:420px; width:90%;
@@ -337,6 +430,12 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .payment-card h2 { font-size:1.6rem; font-weight:800; color: var(--text); margin-bottom:.4rem; }
 .payment-card p { color: var(--text-soft); margin-bottom:1.4rem; font-size:.95rem; }
 .payment-methods { display:flex; flex-direction:column; gap:.8rem; margin:1.2rem 0 1.4rem; }
+.payment-note { color:var(--text-muted); font-size:.82rem; line-height:1.45; }
+.checkout-next-step {
+  margin:1.2rem 0; padding:1rem; text-align:left; border-radius:16px;
+  background:var(--accent-bg); color:var(--text-soft); line-height:1.5;
+}
+.checkout-back { margin-top:.85rem; }
 .pay-method {
   display:flex; align-items:center; gap:1rem; background: var(--accent-bg);
   padding:.9rem 1.3rem; border-radius:50px; border:1px solid var(--border-soft);
@@ -364,7 +463,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .booked-card p { color:var(--text-muted); font-size:.9rem; margin-top:.3rem; }
 .booked-card .booking-amount { color:var(--primary-light); font-weight:800; white-space:nowrap; }
 .booked-empty { color:var(--text-muted); padding:1.2rem; background:var(--card-bg); border:1px dashed var(--border); border-radius:16px; }
-.booking-status { color:#92400e !important; }
+.booking-status { color:var(--warning-text) !important; }
 
 /* TOAST */
 .toast {
@@ -381,18 +480,32 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   text-align:center; margin-top:2rem; padding:2rem 1rem 3rem;
   color: var(--text-muted); font-size:.9rem; border-top:1px solid var(--border);
 }
+.header-brand { display:flex; align-items:center; justify-content:space-between; gap:.75rem; }
+.menu-toggle {
+  display:none; background:var(--bg-alt); border:1px solid var(--border-soft);
+  color:var(--text); width:42px; height:42px; border-radius:50%;
+  align-items:center; justify-content:center; font-size:1rem; cursor:pointer;
+  box-shadow:var(--shadow-sm);
+}
+.menu-toggle:hover { background:var(--accent-bg); }
+.menu-toggle:focus-visible { outline:3px solid var(--primary-light); outline-offset:3px; }
 
 @media (max-width:900px) {
   .hero { grid-template-columns: 1fr; }
   .hero-img { height: 220px; }
-  .nav-links { display:none; }
+  .header-brand { width:100%; }
+  .menu-toggle { display:flex; }
+  .nav-links { display:none; order:3; width:100%; flex-direction:column; gap:.25rem; padding:.5rem 0; border-top:1px solid var(--border); }
+  .nav-links.open { display:flex; }
+  .nav-links a { padding:.65rem .25rem; }
+  .header-actions { order:2; }
 }
 @media (max-width:700px) {
   .main-header { flex-direction:column; align-items:flex-start; }
   .header-actions { width:100%; justify-content:flex-start; }
   .hero h1 { font-size:1.9rem; }
   .hero { padding:1.5rem; }
-  .chat-window { width:90vw; max-width:320px; }
+  .chat-window { width:90vw; max-width:360px; }
   .chatbot-container { bottom:1rem; right:1rem; }
   #map { height: 320px; }
   .search-box.open { max-width:100%; }
@@ -426,7 +539,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .admin-portal .admin-login button { width:100%; }
 .admin-portal .admin-login button:hover,
 .admin-portal .admin-simulate:hover { background:var(--primary-hover); }
-.admin-portal .admin-error { min-height:1.3rem; color:#dc2626; font-size:.9rem; }
+.admin-portal .admin-error { min-height:1.3rem; color:var(--error-text); font-size:.9rem; }
 .admin-portal .admin-demo-note { font-size:.8rem; text-align:center; }
 .admin-portal .admin-dashboard { display:none; }
 .admin-portal .admin-topbar {
@@ -463,9 +576,9 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 }
 .admin-portal th { color:var(--text-muted); background:var(--accent-bg); text-transform:uppercase; font-size:.72rem; }
 .admin-portal .admin-badge { padding:.2rem .55rem; border-radius:1rem; font-size:.75rem; font-weight:700; }
-.admin-portal .admin-badge.success { color:#166534; background:#dcfce7; }
-.admin-portal .admin-badge.pending { color:#92400e; background:#fef3c7; }
-.admin-portal .admin-badge.failed { color:#991b1b; background:#fee2e2; }
+.admin-portal .admin-badge.success { color:var(--success-text); background:var(--success-bg); }
+.admin-portal .admin-badge.pending { color:var(--warning-text); background:var(--warning-bg); }
+.admin-portal .admin-badge.failed { color:var(--danger-text); background:var(--danger-bg); }
 .admin-portal .admin-empty { padding:2rem; text-align:center; color:var(--text-muted); }
 @media (max-width:600px) {
   .admin-portal .admin-topbar { align-items:flex-start; }
@@ -477,9 +590,15 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 <div class="container">
   <!-- HEADER -->
   <header class="main-header">
-    <div class="logo"><i class="fas fa-hand-holding-heart"></i> EasyLife</div>
+    <div class="header-brand">
+      <div class="logo"><i class="fas fa-hand-holding-heart"></i> EasyLife</div>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-controls="primaryNavigation"
+              aria-expanded="false" aria-label="Toggle navigation" data-i18n-aria-label="navToggle">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+      </button>
+    </div>
 
-    <nav class="nav-links">
+    <nav class="nav-links" id="primaryNavigation">
       <a href="#home" class="active" data-i18n="navHome">Home</a>
       <a href="#services" data-i18n="navServices">Services</a>
       <a href="#map-section" data-i18n="navMap">Map</a>
@@ -512,6 +631,30 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
          target="_blank" rel="noopener noreferrer" title="Chat with us on WhatsApp" aria-label="Chat with us on WhatsApp">
         <i class="fab fa-whatsapp"></i>
       </a>
+      <div class="bookings-widget">
+        <button class="bookings-toggle" id="bookingsToggle" type="button" aria-controls="bookingsPanel"
+                aria-expanded="false" aria-label="Booked services" title="Booked services"
+                data-i18n-aria-label="bookingsLabel">
+          <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+          <span class="bookings-count" id="bookingsCount" aria-hidden="true" hidden>0</span>
+        </button>
+        <section class="bookings-panel" id="bookingsPanel" aria-labelledby="bookingsPanelTitle">
+          <div class="bookings-panel-header">
+            <h2 id="bookingsPanelTitle" data-i18n="bookingsLabel">Booked services</h2>
+            <button class="bookings-close" id="bookingsClose" type="button" aria-label="Close booked services"
+                    data-i18n-aria-label="bookingsClose">
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <ul class="bookings-panel-list" id="bookingsPanelList" aria-live="polite">
+            <li class="bookings-panel-empty" data-i18n="bookingsEmpty">No services booked yet.</li>
+          </ul>
+          <div class="bookings-panel-footer">
+            <span class="bookings-total"><span data-i18n="bookingsTotal">Total</span>: <span id="bookingsTotal">$0</span></span>
+            <button class="bookings-checkout" id="bookingsCheckout" type="button" data-i18n="continuePayment" disabled>Continue to payment</button>
+          </div>
+        </section>
+      </div>
     </div>
   </header>
 
@@ -693,31 +836,44 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   <div class="payment-card" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
     <h2 id="paymentTitle" data-i18n="paymentTitle">Pay for service</h2>
     <p id="paymentSummary" data-i18n="paymentSummary">Complete your booking securely.</p>
-    <div class="payment-methods">
+    <p class="payment-note" id="paymentDemoNotice" data-i18n="paymentDemoNotice">Demo only: payment providers are not connected, so no payment will be charged or confirmed.</p>
+    <div class="payment-methods" id="paymentMethods">
       <button class="pay-method" type="button" data-payment-method="Visa"><i class="fab fa-cc-visa" aria-hidden="true"></i> Visa</button>
       <button class="pay-method" type="button" data-payment-method="Mastercard"><i class="fab fa-cc-mastercard" aria-hidden="true"></i> Mastercard</button>
       <button class="pay-method" type="button" data-payment-method="PayPal"><i class="fab fa-cc-paypal" aria-hidden="true"></i> PayPal</button>
       <button class="pay-method" type="button" data-payment-method="Mobile money"><i class="fas fa-mobile-alt" aria-hidden="true"></i> Mobile money</button>
+    </div>
+    <div class="checkout-next-step hidden" id="checkoutNextStep">
+      <p id="checkoutNextStepMessage"></p>
+      <button class="close-payment checkout-back" type="button" onclick="backToPaymentMethods()" data-i18n="checkoutBack">Choose another method</button>
     </div>
     <button class="close-payment" type="button" onclick="closePayment()" data-i18n="closeBtn">Close</button>
   </div>
 </div>
 
 <div class="chatbot-container">
-  <div class="chat-window" id="chatWindow">
+  <div class="chat-window" id="chatWindow" role="region" aria-label="EasyLife assistant">
     <div class="chat-header">
-      <span><i class="fas fa-robot"></i> EasyBot</span>
-      <button class="chat-close" type="button" aria-label="Close chat" onclick="toggleChat()"><i class="fas fa-times"></i></button>
+      <div><span><span class="chat-robot" aria-hidden="true">🤖</span> <span id="chatHeading">EasyLife Assistant</span></span><div class="chat-status" id="chatStatus">Here to help you book a service</div></div>
+      <button class="chat-close" id="chatClose" type="button" aria-label="Close chat" onclick="toggleChat()"><i class="fas fa-times"></i></button>
     </div>
-    <div class="chat-body" id="chatBody">
-      <div class="bot-message"><strong>EasyBot:</strong> Hi! I can help you find trusted local services./Muraho nagufasha gushakisha abakozi bizewe!</div>
+    <div class="chat-body" id="chatBody" aria-live="polite" aria-label="Chat messages">
+      <div class="bot-message" id="chatWelcome">Hi! 👋 I’m the EasyLife assistant. We work in Kabuga, Kigali. Which service do you need?</div>
+      <div class="chat-options" id="chatOptions">
+        <button class="chat-option" type="button" data-chat-action="services">🧰 Browse services</button>
+        <button class="chat-option" type="button" data-chat-action="coverage">📍 Do you work in Kabuga?</button>
+        <button class="chat-option" type="button" data-chat-action="booking">📅 How do I book?</button>
+        <button class="chat-option" type="button" data-chat-action="payments">💳 Payment options</button>
+        <button class="chat-option" type="button" data-chat-action="bookings">📋 My booked services</button>
+        <button class="chat-option" type="button" data-chat-action="contact">💬 Talk to our team</button>
+      </div>
     </div>
-    <div class="chat-footer">
-      <input id="chatInput" type="text" placeholder="Ask about a service...">
-      <button type="button" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
-    </div>
+    <form class="chat-footer" id="chatForm">
+      <input id="chatInput" type="text" placeholder="Ask about a service..." aria-label="Type your message" autocomplete="off">
+      <button id="chatSend" type="submit" aria-label="Send message"><i class="fas fa-paper-plane" aria-hidden="true"></i></button>
+    </form>
   </div>
-  <button class="chat-toggle" type="button" aria-label="Open chat" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></button>
+  <button class="chat-toggle" type="button" aria-label="Open chat" aria-controls="chatWindow" aria-expanded="false" onclick="toggleChat()"><span aria-hidden="true">🤖</span></button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -727,6 +883,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   const translations = {
     en: {
       siteTitle: 'Home Services',
+      navToggle: 'Toggle navigation',
       navHome: 'Home',
       navServices: 'Services',
       navMap: 'Map',
@@ -774,6 +931,15 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       signupButton: 'Create account',
       paymentTitle: 'Pay for service',
       paymentSummary: 'Complete your booking securely.',
+      paymentDemoNotice: 'Demo only: payment providers are not connected, so no payment will be charged or confirmed.',
+      bookingsLabel: 'Booked services',
+      bookingsEmpty: 'No services booked yet.',
+      bookingsTotal: 'Total',
+      continuePayment: 'Continue to payment',
+      checkoutSummary: 'Reviewing %COUNT% service(s) · Total $%TOTAL%',
+      checkoutNextStep: '%METHOD% selected for $%TOTAL%. Payment is not connected in this demo, so your bookings remain saved and unpaid.',
+      checkoutBack: 'Choose another method',
+      bookingsClose: 'Close booked services',
       bookedTitle: 'Booked services',
       bookedEmpty: 'Your booked services will appear here.',
       bookingPending: 'Awaiting payment. Complete payment with your selected provider.',
@@ -783,6 +949,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     },
     rw: {
       siteTitle: 'Serivisi zo mu rugo',
+      navToggle: 'Fungura cyangwa ufunge amahitamo',
       navHome: 'Ahabanza',
       navServices: 'Serivisi',
       navMap: 'Ikarita',
@@ -830,6 +997,15 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       signupButton: 'Fungura konti',
       paymentTitle: 'Kwishyura serivisi',
       paymentSummary: 'Kuzuza gahunda yawe yizewe.',
+      paymentDemoNotice: 'Iyi ni demo gusa: uburyo bwo kwishyura ntibwahujwe, bityo nta mafaranga yishyurwa cyangwa yemezwa.',
+      bookingsLabel: 'Serivisi zahisemo',
+      bookingsEmpty: 'Nta serivisi urahitamo.',
+      bookingsTotal: 'Igiteranyo',
+      continuePayment: 'Komeza kwishyura',
+      checkoutSummary: 'Serivisi %COUNT% · Igiteranyo $%TOTAL%',
+      checkoutNextStep: 'Wahisemo %METHOD% kuri $%TOTAL%. Ubwishyu ntibwahujwe muri iyi demo, bityo serivisi zawe zirabikwa ariko ntizishyuwe.',
+      checkoutBack: 'Hitamo ubundi buryo',
+      bookingsClose: 'Funga serivisi wahisemo',
       bookedTitle: 'Serivisi wahisemo',
       bookedEmpty: 'Serivisi wahisemo zizagaragara hano.',
       bookingPending: 'Tegereje kwishyura. Soza ubwishyu ukoresheje uburyo wahisemo.',
@@ -839,6 +1015,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     },
     fr: {
       siteTitle: 'Services à domicile',
+      navToggle: 'Afficher ou masquer la navigation',
       navHome: 'Accueil',
       navServices: 'Services',
       navMap: 'Carte',
@@ -886,6 +1063,15 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       signupButton: 'Créer un compte',
       paymentTitle: 'Payer le service',
       paymentSummary: 'Complétez votre réservation en toute sécurité.',
+      paymentDemoNotice: 'Démo uniquement : les prestataires de paiement ne sont pas connectés. Aucun paiement ne sera débité ni confirmé.',
+      bookingsLabel: 'Services réservés',
+      bookingsEmpty: 'Aucun service réservé pour le moment.',
+      bookingsTotal: 'Total',
+      continuePayment: 'Continuer vers le paiement',
+      checkoutSummary: '%COUNT% service(s) · Total $%TOTAL%',
+      checkoutNextStep: '%METHOD% sélectionné pour $%TOTAL%. Le paiement n’est pas connecté dans cette démo : vos réservations restent enregistrées et impayées.',
+      checkoutBack: 'Choisir un autre moyen',
+      bookingsClose: 'Fermer les services réservés',
       bookedTitle: 'Services réservés',
       bookedEmpty: 'Vos services réservés apparaîtront ici.',
       bookingPending: 'En attente de paiement. Terminez le paiement avec le fournisseur choisi.',
@@ -904,6 +1090,10 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
         node.textContent = locale[key];
       }
     });
+    document.querySelectorAll('[data-i18n-aria-label]').forEach((node) => {
+      const key = node.getAttribute('data-i18n-aria-label');
+      if (locale[key]) node.setAttribute('aria-label', locale[key]);
+    });
     const langSelect = document.getElementById('langSelect');
     if (langSelect) langSelect.value = lang;
     document.title = `EasyLife · ${locale.siteTitle || 'Home Services'}`;
@@ -914,22 +1104,31 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     localStorage.setItem('easyLifeLang', lang);
     applyTranslations(lang);
     renderBookedServices();
+    updateChatInterface();
+    updateCheckoutCopy();
   }
 
   function setTheme(theme, persist = true) {
-    const nextTheme = theme === 'dark' ? 'dark' : 'light';
+    const nextTheme = ['light', 'bright', 'dark'].includes(theme) ? theme : 'light';
     document.documentElement.setAttribute('data-theme', nextTheme);
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
-      themeToggle.innerHTML = nextTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-      themeToggle.setAttribute('title', nextTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+      const nextMode = {
+        light: { icon: 'palette', label: 'Switch to blue bright mode' },
+        bright: { icon: 'moon', label: 'Switch to dark mode' },
+        dark: { icon: 'sun', label: 'Switch to light mode' }
+      }[nextTheme];
+      themeToggle.innerHTML = `<i class="fas fa-${nextMode.icon}" aria-hidden="true"></i>`;
+      themeToggle.setAttribute('title', nextMode.label);
+      themeToggle.setAttribute('aria-label', nextMode.label);
     }
     if (persist) localStorage.setItem('easyLifeTheme', nextTheme);
   }
 
   function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    const themes = ['light', 'bright', 'dark'];
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const nextTheme = themes[(themes.indexOf(currentTheme) + 1) % themes.length];
     setTheme(nextTheme);
   }
 
@@ -942,6 +1141,21 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
         setTimeout(() => input && input.focus(), 100);
       }
     }
+  }
+
+  function setMobileNavigation(open) {
+    const menu = document.getElementById('primaryNavigation');
+    const toggle = document.getElementById('menuToggle');
+    if (!menu || !toggle) return;
+
+    menu.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.innerHTML = `<i class="fas fa-${open ? 'times' : 'bars'}" aria-hidden="true"></i>`;
+  }
+
+  function toggleMobileNavigation() {
+    const menu = document.getElementById('primaryNavigation');
+    if (menu) setMobileNavigation(!menu.classList.contains('open'));
   }
 
   function filterJobs() {
@@ -969,14 +1183,84 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   let currentPayment = null;
 
   function openPayment(serviceName, amount) {
-    currentPayment = { serviceName, amount };
+    currentPayment = { serviceName, amount, isCheckout: false };
+    document.getElementById('paymentMethods')?.classList.remove('hidden');
+    document.getElementById('paymentDemoNotice')?.classList.remove('hidden');
+    document.getElementById('checkoutNextStep')?.classList.add('hidden');
     const summary = document.getElementById('paymentSummary');
     if (summary) summary.textContent = `${serviceName} — $${amount}`;
     document.getElementById('paymentOverlay')?.classList.add('active');
   }
 
+  function updateCheckoutCopy() {
+    if (!currentPayment || !currentPayment.isCheckout) return;
+
+    const bookings = getBookings();
+    const locale = translations[document.documentElement.lang] || translations.en;
+    const total = bookings.reduce((sum, booking) => sum + (Number(booking.amount) || 0), 0);
+    currentPayment.amount = total;
+    currentPayment.bookingCount = bookings.length;
+    document.getElementById('paymentSummary').textContent = locale.checkoutSummary
+      .replace('%COUNT%', bookings.length)
+      .replace('%TOTAL%', total);
+
+    if (currentPayment.paymentMethod && !document.getElementById('checkoutNextStep').classList.contains('hidden')) {
+      document.getElementById('checkoutNextStepMessage').textContent = locale.checkoutNextStep
+        .replace('%METHOD%', currentPayment.paymentMethod)
+        .replace('%TOTAL%', total);
+    }
+  }
+
+  function startCheckout() {
+    const bookings = getBookings();
+    if (!bookings.length) return;
+
+    const locale = translations[document.documentElement.lang] || translations.en;
+    const total = bookings.reduce((sum, booking) => sum + (Number(booking.amount) || 0), 0);
+    currentPayment = { amount: total, bookingCount: bookings.length, isCheckout: true };
+    document.getElementById('paymentMethods')?.classList.remove('hidden');
+    document.getElementById('paymentDemoNotice')?.classList.remove('hidden');
+    document.getElementById('checkoutNextStep')?.classList.add('hidden');
+    document.getElementById('paymentSummary').textContent = locale.checkoutSummary
+      .replace('%COUNT%', bookings.length)
+      .replace('%TOTAL%', total);
+    document.getElementById('paymentOverlay')?.classList.add('active');
+    setBookingsPanel(false);
+  }
+
   function closePayment() {
     document.getElementById('paymentOverlay')?.classList.remove('active');
+    document.getElementById('paymentMethods')?.classList.remove('hidden');
+    document.getElementById('paymentDemoNotice')?.classList.remove('hidden');
+    document.getElementById('checkoutNextStep')?.classList.add('hidden');
+    currentPayment = null;
+  }
+
+  function continueCheckout(paymentMethod) {
+    if (!currentPayment || !currentPayment.isCheckout) return;
+
+    const bookings = getBookings();
+    if (!bookings.length) {
+      closePayment();
+      renderBookedServices();
+      return;
+    }
+
+    const locale = translations[document.documentElement.lang] || translations.en;
+    const total = bookings.reduce((sum, booking) => sum + (Number(booking.amount) || 0), 0);
+    currentPayment.paymentMethod = paymentMethod;
+    document.getElementById('paymentMethods')?.classList.add('hidden');
+    document.getElementById('paymentDemoNotice')?.classList.add('hidden');
+    document.getElementById('checkoutNextStep')?.classList.remove('hidden');
+    document.getElementById('checkoutNextStepMessage').textContent = locale.checkoutNextStep
+      .replace('%METHOD%', paymentMethod)
+      .replace('%TOTAL%', total);
+  }
+
+  function backToPaymentMethods() {
+    document.getElementById('checkoutNextStep')?.classList.add('hidden');
+    document.getElementById('paymentDemoNotice')?.classList.remove('hidden');
+    document.getElementById('paymentMethods')?.classList.remove('hidden');
   }
 
   function getBookings() {
@@ -985,6 +1269,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   }
 
   function renderBookedServices() {
+    renderBookingWidget();
     const list = document.getElementById('bookedServicesList');
     if (!list) return;
 
@@ -1022,8 +1307,67 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     });
   }
 
+  function renderBookingWidget() {
+    const list = document.getElementById('bookingsPanelList');
+    const countBadge = document.getElementById('bookingsCount');
+    const totalElement = document.getElementById('bookingsTotal');
+    const checkoutButton = document.getElementById('bookingsCheckout');
+    if (!list || !countBadge || !totalElement || !checkoutButton) return;
+
+    const bookings = getBookings();
+    const locale = translations[document.documentElement.lang] || translations.en;
+    const total = bookings.reduce((sum, booking) => sum + (Number(booking.amount) || 0), 0);
+    countBadge.textContent = String(bookings.length);
+    countBadge.hidden = bookings.length === 0;
+    document.getElementById('bookingsToggle')?.setAttribute('aria-label', `${locale.bookingsLabel} (${bookings.length})`);
+    totalElement.textContent = `$${total}`;
+    checkoutButton.disabled = bookings.length === 0;
+    list.replaceChildren();
+
+    if (!bookings.length) {
+      const emptyMessage = document.createElement('li');
+      emptyMessage.className = 'bookings-panel-empty';
+      emptyMessage.textContent = locale.bookingsEmpty;
+      list.appendChild(emptyMessage);
+      return;
+    }
+
+    bookings.slice().reverse().forEach((booking) => {
+      const item = document.createElement('li');
+      item.className = 'bookings-panel-item';
+      const details = document.createElement('div');
+      const name = document.createElement('strong');
+      name.textContent = booking.serviceName;
+      const status = document.createElement('span');
+      status.textContent = locale.bookingPending;
+      details.append(name, status);
+      const amount = document.createElement('span');
+      amount.className = 'bookings-item-amount';
+      amount.textContent = `$${Number(booking.amount) || 0}`;
+      item.append(details, amount);
+      list.appendChild(item);
+    });
+  }
+
+  function setBookingsPanel(open) {
+    const panel = document.getElementById('bookingsPanel');
+    const toggle = document.getElementById('bookingsToggle');
+    if (!panel || !toggle) return;
+    panel.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+  }
+
+  function toggleBookingsPanel() {
+    const panel = document.getElementById('bookingsPanel');
+    if (panel) setBookingsPanel(!panel.classList.contains('open'));
+  }
+
   function completeBooking(paymentMethod) {
     if (!currentPayment) return;
+    if (currentPayment.isCheckout) {
+      continueCheckout(paymentMethod);
+      return;
+    }
 
     const bookings = getBookings();
     bookings.push({
@@ -1050,31 +1394,304 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
   }
 
-  function toggleChat() {
-    const chatWindow = document.getElementById('chatWindow');
-    if (chatWindow) chatWindow.classList.toggle('active');
+  const chatCopy = {
+    en: {
+      heading: 'EasyLife Assistant', status: 'Here to help you book a service',
+      welcome: 'Hi! 👋 I’m the EasyLife assistant. We work in Kabuga, Kigali. Which service do you need?',
+      input: 'Ask about a service...', send: 'Send message', close: 'Close chat', open: 'Open chat',
+      services: '🧰 Browse services', coverage: '📍 Do you work in Kabuga?',
+      booking: '📅 How do I book?', payments: '💳 Payment options',
+      bookings: '📋 My booked services', contact: '💬 Talk to our team',
+      serviceQuestion: 'Which service do you need? Choose one to see details and the starting price:',
+      serviceDetails: '%SERVICE%: %DESCRIPTION% Starting price: $%PRICE%.',
+      bookService: 'Book %SERVICE% · from $%PRICE%',
+      bookingHelp: 'Choose a service, tap “Hire & pay,” then select a payment method. Your booking will appear under Booked services. Payment processing is not connected yet, so bookings remain pending.',
+      coverageAnswer: 'Yes! EasyLife serves Kabuga, in Gasabo District, Kigali. If you are nearby and unsure whether we cover your exact location, message our team to confirm.',
+      paymentsAnswer: 'The booking screen lists Visa, Mastercard, PayPal, and Mobile money. This demo records your selected method but is not connected to a payment provider, so it cannot charge you or confirm a payment.',
+      noBookings: 'There are no booked services saved in this browser yet. Choose a service and I can help you get started.',
+      bookingsAnswer: 'You have %COUNT% saved booking(s)%DETAILS%. Payment is not confirmed in this demo.',
+      bookingDetail: '\n• %SERVICE% — $%PRICE% (%METHOD%)',
+      contactAnswer: 'Need help from a person? Start a WhatsApp chat with our team:',
+      contactLink: 'Chat with EasyLife on WhatsApp',
+      greeting: 'Hello! 👋 What can I help you with today?',
+      thanks: 'You’re welcome! Let me know if you need help choosing a service.',
+      fallback: 'I can help you find a service, check Kabuga coverage, explain booking and payment options, or show your saved bookings. Choose an option below or tell me what service you need.'
+    },
+    rw: {
+      heading: 'Umufasha wa EasyLife', status: 'Ndagufasha guhitamo serivisi',
+      welcome: 'Muraho! 👋 Ndi umufasha wa EasyLife. Dutanga serivisi i Kabuga, Kigali. Ni iyihe serivisi ukeneye?',
+      input: 'Baza ibijyanye na serivisi...', send: 'Ohereza ubutumwa', close: 'Funga ikiganiro', open: 'Fungura ikiganiro',
+      services: '🧰 Reba serivisi', coverage: '📍 Mukorera i Kabuga?',
+      booking: '📅 Ntegeka nte serivisi?', payments: '💳 Uburyo bwo kwishyura',
+      bookings: '📋 Serivisi nategetse', contact: '💬 Vugana n\'itsinda ryacu',
+      serviceQuestion: 'Ni iyihe serivisi ukeneye? Hitamo imwe urebe ibisobanuro n\'igiciro gitangiriraho:',
+      serviceDetails: '%SERVICE%: %DESCRIPTION% Igiciro gitangiriraho ni $%PRICE%.',
+      bookService: 'Teganya %SERVICE% · kuva $%PRICE%',
+      bookingHelp: 'Hitamo serivisi, ukande “Koresha & wishyure”, hanyuma uhitemo uburyo bwo kwishyura. Serivisi izagaragara muri serivisi wategetse. Ubu kwishyura ntibirahuzwa n\'uburyo bwo kwishyura, bityo serivisi izaguma itegereje.',
+      coverageAnswer: 'Yego! EasyLife ikorera i Kabuga, mu Karere ka Gasabo, Kigali. Niba utazi neza ko aho uri hatugeraho, andikira itsinda ryacu kuri WhatsApp tubyemeze.',
+      paymentsAnswer: 'Uburyo bugaragara ni Visa, Mastercard, PayPal na Mobile money. Iyi ni demo ibika gusa uburyo wahisemo; ntabwo ihujwe n\'uburyo bwo kwishyura kandi ntishobora kwishyuza cyangwa kwemeza ubwishyu.',
+      noBookings: 'Nta serivisi wategetse ibitswe muri iyi browser. Hitamo serivisi, ngufashe gutangira.',
+      bookingsAnswer: 'Ufite serivisi %COUNT% zibitswe%DETAILS%. Ubwishyu ntiburabyemezwa muri iyi demo.',
+      bookingDetail: '\n• %SERVICE% — $%PRICE% (%METHOD%)',
+      contactAnswer: 'Ukeneye kuvugana n\'umuntu? Andikira itsinda ryacu kuri WhatsApp:',
+      contactLink: 'Vugana na EasyLife kuri WhatsApp',
+      greeting: 'Muraho! 👋 Nagufasha iki uyu munsi?',
+      thanks: 'Murakoze! Mbwira niba ukeneye ubufasha mu guhitamo serivisi.',
+      fallback: 'Nagufasha kubona serivisi, kumenya niba dukorera i Kabuga, gusobanura uko serivisi iteganywa cyangwa kwishyurwa, cyangwa kureba ibyo wategetse. Hitamo uburyo buri hano cyangwa umbwire serivisi ukeneye.'
+    },
+    fr: {
+      heading: 'Assistant EasyLife', status: 'Je vous aide à réserver un service',
+      welcome: 'Bonjour ! 👋 Je suis l’assistant EasyLife. Nous intervenons à Kabuga, Kigali. De quel service avez-vous besoin ?',
+      input: 'Posez une question sur un service...', send: 'Envoyer', close: 'Fermer le chat', open: 'Ouvrir le chat',
+      services: '🧰 Voir les services', coverage: '📍 Intervenez-vous à Kabuga ?',
+      booking: '📅 Comment réserver ?', payments: '💳 Moyens de paiement',
+      bookings: '📋 Mes réservations', contact: '💬 Contacter notre équipe',
+      serviceQuestion: 'De quel service avez-vous besoin ? Choisissez-en un pour voir les détails et le prix de départ :',
+      serviceDetails: '%SERVICE% : %DESCRIPTION% Prix de départ : $%PRICE%.',
+      bookService: 'Réserver %SERVICE% · dès $%PRICE%',
+      bookingHelp: 'Choisissez un service, appuyez sur « Engager & payer », puis sélectionnez un moyen de paiement. La réservation apparaîtra dans vos services réservés. Le paiement n’est pas encore connecté : la réservation restera en attente.',
+      coverageAnswer: 'Oui ! EasyLife intervient à Kabuga, dans le district de Gasabo à Kigali. Si vous êtes dans les environs et avez un doute sur votre adresse, contactez notre équipe pour confirmer.',
+      paymentsAnswer: 'L’écran de réservation propose Visa, Mastercard, PayPal et Mobile money. Cette démo enregistre le moyen choisi, mais n’est reliée à aucun prestataire : aucun paiement ne peut être débité ou confirmé.',
+      noBookings: 'Aucun service réservé n’est encore enregistré dans ce navigateur. Choisissez un service et je vous aiderai à commencer.',
+      bookingsAnswer: 'Vous avez %COUNT% réservation(s) enregistrée(s)%DETAILS%. Le paiement n’est pas confirmé dans cette démo.',
+      bookingDetail: '\n• %SERVICE% — $%PRICE% (%METHOD%)',
+      contactAnswer: 'Besoin de parler à une personne ? Écrivez à notre équipe sur WhatsApp :',
+      contactLink: 'Discuter avec EasyLife sur WhatsApp',
+      greeting: 'Bonjour ! 👋 Comment puis-je vous aider ?',
+      thanks: 'Avec plaisir ! Dites-moi si vous avez besoin d’aide pour choisir un service.',
+      fallback: 'Je peux vous aider à trouver un service, vérifier notre zone à Kabuga, expliquer la réservation et le paiement, ou consulter vos réservations. Choisissez une option ou indiquez le service souhaité.'
+    }
+  };
+
+  const chatServices = [
+    { id: 'plumbing', titleKey: 'jobPlumbTitle', descriptionKey: 'jobPlumbDesc', price: 45, aliases: ['plumbing', 'plumber', 'pipe', 'leak', 'drain', 'amazi', 'plomberie', 'plombier'] },
+    { id: 'cooking', titleKey: 'jobCookTitle', descriptionKey: 'jobCookDesc', price: 60, aliases: ['cooking', 'cook', 'chef', 'meal', 'food', 'guteka', 'cuisine', 'cuisinier'] },
+    { id: 'electrical', titleKey: 'jobElecTitle', descriptionKey: 'jobElecDesc', price: 70, aliases: ['electrical', 'electrician', 'wiring', 'outlet', 'electricity', 'amashanyarazi', 'électricité', 'electricien'] },
+    { id: 'cleaning', titleKey: 'jobCleanTitle', descriptionKey: 'jobCleanDesc', price: 35, aliases: ['cleaning', 'cleaner', 'clean', 'maid', 'isuku', 'nettoyage', 'ménage'] },
+    { id: 'handyman', titleKey: 'jobHandyTitle', descriptionKey: 'jobHandyDesc', price: 50, aliases: ['handyman', 'repair', 'furniture', 'mount', 'fix', 'bricolage', 'réparation'] },
+    { id: 'gardening', titleKey: 'jobGardenTitle', descriptionKey: 'jobGardenDesc', price: 40, aliases: ['gardening', 'garden', 'lawn', 'plant', 'ubusitani', 'jardinage', 'jardin'] }
+  ];
+
+  function getChatLocale() {
+    return chatCopy[document.documentElement.lang] || chatCopy.en;
   }
 
-  function sendChatMessage() {
-    const input = document.getElementById('chatInput');
+  function updateChatInterface() {
+    const locale = getChatLocale();
+    document.getElementById('chatHeading').textContent = locale.heading;
+    document.getElementById('chatStatus').textContent = locale.status;
+    document.getElementById('chatInput').placeholder = locale.input;
+    document.getElementById('chatInput').setAttribute('aria-label', locale.input);
+    document.getElementById('chatSend').setAttribute('aria-label', locale.send);
+    document.getElementById('chatClose').setAttribute('aria-label', locale.close);
+    document.querySelector('.chat-toggle')?.setAttribute('aria-label', locale.open);
+    document.getElementById('chatWelcome').textContent = locale.welcome;
+
+    const options = document.getElementById('chatOptions');
+    const labels = [
+      ['services', locale.services],
+      ['coverage', locale.coverage],
+      ['booking', locale.booking],
+      ['payments', locale.payments],
+      ['bookings', locale.bookings],
+      ['contact', locale.contact]
+    ];
+    options.replaceChildren();
+    labels.forEach(([action, label]) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'chat-option';
+      button.dataset.chatAction = action;
+      button.textContent = label;
+      options.appendChild(button);
+    });
+  }
+
+  function addChatMessage(message, sender) {
     const chatBody = document.getElementById('chatBody');
-    if (!input || !chatBody) return;
+    const node = document.createElement('div');
+    node.className = sender === 'user' ? 'user-message' : 'bot-message';
+    node.textContent = message;
+    chatBody.appendChild(node);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  function addChatOptions(options) {
+    const chatBody = document.getElementById('chatBody');
+    const group = document.createElement('div');
+    group.className = 'chat-options';
+    options.forEach((option) => {
+      if (option.href) {
+        const link = document.createElement('a');
+        link.className = 'chat-option';
+        link.href = option.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = option.label;
+        group.appendChild(link);
+        return;
+      }
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'chat-option';
+      button.dataset.chatAction = option.action;
+      if (option.serviceId) button.dataset.serviceId = option.serviceId;
+      button.textContent = option.label;
+      group.appendChild(button);
+    });
+    chatBody.appendChild(group);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  function showServiceOptions() {
+    const locale = getChatLocale();
+    const pageLocale = translations[document.documentElement.lang] || translations.en;
+    addChatMessage(locale.serviceQuestion, 'bot');
+    addChatOptions(chatServices.map((service) => ({
+      action: 'choose-service',
+      serviceId: service.id,
+      label: `${pageLocale[service.titleKey]} · from $${service.price}`
+    })));
+  }
+
+  function selectChatService(serviceId) {
+    const service = chatServices.find((item) => item.id === serviceId);
+    if (!service) return;
+
+    const locale = getChatLocale();
+    const pageLocale = translations[document.documentElement.lang] || translations.en;
+    const serviceName = pageLocale[service.titleKey];
+    const description = pageLocale[service.descriptionKey];
+    addChatMessage(locale.serviceDetails
+      .replace('%SERVICE%', serviceName)
+      .replace('%DESCRIPTION%', description)
+      .replace('%PRICE%', service.price), 'bot');
+    addChatOptions([{
+      action: 'book-service',
+      serviceId: service.id,
+      label: locale.bookService.replace('%SERVICE%', serviceName).replace('%PRICE%', service.price)
+    }]);
+  }
+
+  function handleChatAction(action, serviceId) {
+    const locale = getChatLocale();
+    if (action === 'choose-service') {
+      const service = chatServices.find((item) => item.id === serviceId);
+      if (!service) return;
+      const pageLocale = translations[document.documentElement.lang] || translations.en;
+      addChatMessage(pageLocale[service.titleKey], 'user');
+      selectChatService(serviceId);
+    } else if (action === 'book-service') {
+      const service = chatServices.find((item) => item.id === serviceId);
+      if (!service) return;
+      const pageLocale = translations[document.documentElement.lang] || translations.en;
+      addChatMessage(locale.bookService
+        .replace('%SERVICE%', pageLocale[service.titleKey])
+        .replace('%PRICE%', service.price), 'user');
+      addChatMessage(locale.bookingHelp, 'bot');
+      openPayment(pageLocale[service.titleKey], service.price);
+    } else if (action === 'services') {
+      addChatMessage(locale.services, 'user');
+      showServiceOptions();
+    } else if (action === 'coverage') {
+      addChatMessage(locale.coverage, 'user');
+      addChatMessage(locale.coverageAnswer, 'bot');
+      addChatOptions([{ action: 'services', label: locale.services }, { action: 'contact', label: locale.contact }]);
+    } else if (action === 'booking') {
+      addChatMessage(locale.booking, 'user');
+      addChatMessage(locale.bookingHelp, 'bot');
+      addChatOptions([{ action: 'services', label: locale.services }]);
+    } else if (action === 'payments') {
+      addChatMessage(locale.payments, 'user');
+      addChatMessage(locale.paymentsAnswer, 'bot');
+      addChatOptions([{ action: 'booking', label: locale.booking }, { action: 'contact', label: locale.contact }]);
+    } else if (action === 'bookings') {
+      addChatMessage(locale.bookings, 'user');
+      showChatBookings();
+    } else if (action === 'contact') {
+      addChatMessage(locale.contact, 'user');
+      addChatMessage(locale.contactAnswer, 'bot');
+      addChatOptions([{
+        href: 'https://wa.me/250796591210?text=Hi%20EasyLife',
+        label: locale.contactLink
+      }]);
+    }
+  }
+
+  function showChatBookings() {
+    const locale = getChatLocale();
+    const bookings = getBookings();
+    if (!bookings.length) {
+      addChatMessage(locale.noBookings, 'bot');
+      addChatOptions([{ action: 'services', label: locale.services }]);
+      return;
+    }
+
+    const details = bookings.slice(-3).reverse().map((booking) => locale.bookingDetail
+      .replace('%SERVICE%', booking.serviceName)
+      .replace('%PRICE%', booking.amount)
+      .replace('%METHOD%', booking.paymentMethod)).join('');
+    addChatMessage(locale.bookingsAnswer
+      .replace('%COUNT%', bookings.length)
+      .replace('%DETAILS%', details), 'bot');
+  }
+
+  function respondToChatMessage(message) {
+    const locale = getChatLocale();
+    const normalized = message.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const service = chatServices.find((item) => item.aliases.some((alias) => normalized.includes(alias)));
+    if (service) {
+      selectChatService(service.id);
+    } else if (/\b(kabuga|location|area|where|work in|serve|nearby|district|zone)\b/.test(normalized)) {
+      addChatMessage(locale.coverageAnswer, 'bot');
+      addChatOptions([{ action: 'services', label: locale.services }, { action: 'contact', label: locale.contact }]);
+    } else if (/\b(book|booking|reserve|reservation|hire|order)\b/.test(normalized)) {
+      addChatMessage(locale.bookingHelp, 'bot');
+      addChatOptions([{ action: 'services', label: locale.services }]);
+    } else if (/\b(payment|pay|money|visa|mastercard|paypal|cost|price|charge)\b/.test(normalized)) {
+      addChatMessage(locale.paymentsAnswer, 'bot');
+    } else if (/\b(booked|my services|my bookings|status|order status)\b/.test(normalized)) {
+      showChatBookings();
+    } else if (/\b(service|services|offer|available|need|which)\b/.test(normalized)) {
+      showServiceOptions();
+    } else if (/\b(hello|hi|hey|muraho|bonjour|salut)\b/.test(normalized)) {
+      addChatMessage(locale.greeting, 'bot');
+    } else if (/\b(thanks|thank you|murakoze|merci)\b/.test(normalized)) {
+      addChatMessage(locale.thanks, 'bot');
+    } else if (/\b(human|person|team|support|contact|whatsapp|help)\b/.test(normalized)) {
+      handleChatAction('contact');
+    } else {
+      addChatMessage(locale.fallback, 'bot');
+      addChatOptions([
+        { action: 'services', label: locale.services },
+        { action: 'coverage', label: locale.coverage },
+        { action: 'contact', label: locale.contact }
+      ]);
+    }
+  }
+
+  function toggleChat() {
+    const chatWindow = document.getElementById('chatWindow');
+    const toggle = document.querySelector('.chat-toggle');
+    if (chatWindow) {
+      const isOpen = chatWindow.classList.toggle('active');
+      toggle?.setAttribute('aria-expanded', String(isOpen));
+      if (isOpen) document.getElementById('chatInput')?.focus();
+    }
+  }
+
+  function sendChatMessage(event) {
+    event?.preventDefault();
+    const input = document.getElementById('chatInput');
+    if (!input) return;
 
     const message = input.value.trim();
     if (!message) return;
 
-    const userMessage = document.createElement('div');
-    userMessage.className = 'user-message';
-    userMessage.textContent = message;
-    chatBody.appendChild(userMessage);
-
-    const reply = document.createElement('div');
-    reply.className = 'bot-message';
-    reply.innerHTML = '<strong>EasyBot:</strong> We can help with that. Please choose a service from our list and we will match a trusted pro.';
-    chatBody.appendChild(reply);
-
+    addChatMessage(message, 'user');
     input.value = '';
-    chatBody.scrollTop = chatBody.scrollHeight;
+    respondToChatMessage(message);
   }
 
   function initializeMap() {
@@ -1100,9 +1717,21 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     const savedLang = localStorage.getItem('easyLifeLang') || 'en';
     setTheme(savedTheme, false);
     applyTranslations(savedLang);
+    updateChatInterface();
     renderBookedServices();
     initializeMap();
 
+    document.getElementById('menuToggle')?.addEventListener('click', toggleMobileNavigation);
+    document.querySelectorAll('#primaryNavigation a').forEach((link) => {
+      link.addEventListener('click', () => setMobileNavigation(false));
+    });
+    document.getElementById('bookingsToggle')?.addEventListener('click', toggleBookingsPanel);
+    document.getElementById('bookingsClose')?.addEventListener('click', () => setBookingsPanel(false));
+    document.getElementById('bookingsCheckout')?.addEventListener('click', startCheckout);
+    document.addEventListener('click', (event) => {
+      const widget = document.querySelector('.bookings-widget');
+      if (widget && !widget.contains(event.target)) setBookingsPanel(false);
+    });
     document.querySelectorAll('.pay-method[data-payment-method]').forEach((button) => {
       button.addEventListener('click', () => completeBooking(button.dataset.paymentMethod));
     });
@@ -1111,6 +1740,8 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     });
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') closePayment();
+      if (event.key === 'Escape') setMobileNavigation(false);
+      if (event.key === 'Escape') setBookingsPanel(false);
     });
 
     const loginLinks = document.querySelectorAll('#login .tabs [data-tab]');
@@ -1141,8 +1772,11 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       showToast('Account created!');
     });
 
-    document.getElementById('chatInput')?.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') sendChatMessage();
+    document.getElementById('chatForm')?.addEventListener('submit', sendChatMessage);
+    document.getElementById('chatBody')?.addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-chat-action]');
+      if (!button) return;
+      handleChatAction(button.dataset.chatAction, button.dataset.serviceId);
     });
   });
 </script>
@@ -1368,106 +2002,6 @@ function renderAdminDashboard() {
     .filter(j => j.status === "success")
     .reduce((sum, j) => sum + j.amount, 0);
 }
-  <script type="module">
-  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/esm/index.js";
-
-  const supabaseUrl = "YOUR_SUPABASE_URL";
-  const supabaseAnonKey = "YOUR_SUPABASE_ANON_KEY";
-
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-  async function saveLoginEvent(userId, eventType) {
-    const { error } = await supabase
-      .from("login_events")
-      .insert([
-        { user_id: userId, event_type: eventType }
-      ]);
-
-    if (error) {
-      console.error("Error saving event:", error);
-      return false;
-    }
-
-    return true;
-  }
-
-  async function signUp(email, password) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      return { data: null, error };
-    }
-
-    if (data?.user) {
-      await saveLoginEvent(data.user.id, "signup");
-    }
-
-    return { data, error: null };
-  }
-
-  async function signIn(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      return { data: null, error };
-    }
-
-    if (data?.user) {
-      await saveLoginEvent(data.user.id, "login");
-    }
-
-    return { data, error: null };
-  }
-
-  // Example form handling
-  document.addEventListener("DOMContentLoaded", () => {
-    const signupForm = document.getElementById("signup-form");
-    const loginForm = document.getElementById("login-form");
-    const messageBox = document.getElementById("message");
-
-    if (signupForm) {
-      signupForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const email = document.getElementById("signup-email").value;
-        const password = document.getElementById("signup-password").value;
-
-        const result = await signUp(email, password);
-
-        if (result.error) {
-          messageBox.textContent = "Sign up failed: " + result.error.message;
-          return;
-        }
-
-        messageBox.textContent = "Sign up successful! User saved to Supabase Auth.";
-      });
-    }
-
-    if (loginForm) {
-      loginForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const email = document.getElementById("login-email").value;
-        const password = document.getElementById("login-password").value;
-
-        const result = await signIn(email, password);
-
-        if (result.error) {
-          messageBox.textContent = "Login failed: " + result.error.message;
-          return;
-        }
-
-        messageBox.textContent = "Login successful! Login event saved to Supabase.";
-      });
-    }
-  });
-</script>
 </script>
 <div class="footer-note" data-i18n="footerNote">© 2026 EasyLife. Trusted home services for every day life.</div>
 </div>
