@@ -888,8 +888,9 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   const supabaseClient = window.supabase
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     : null;
+  const GUEST_BOOKINGS_KEY = 'easyLifeGuestBookings';
   let currentUser = null;
-  let bookingsCache = [];
+  let bookingsCache = loadGuestBookings();
 
   const translations = {
     en: {
@@ -1195,6 +1196,25 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 
   function openPayment(serviceName, amount) {
     currentPayment = { serviceName, amount, isCheckout: false };
+    if (!currentUser) {
+      const booking = {
+        id: `guest-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        serviceName,
+        amount: Number(amount),
+        paymentMethod: 'Not selected',
+        status: 'pending',
+        date: new Date().toISOString(),
+        isGuest: true
+      };
+      bookingsCache.push(booking);
+      if (!saveGuestBookings()) {
+        bookingsCache.pop();
+        currentPayment = null;
+        return;
+      }
+      currentPayment.bookingId = booking.id;
+      renderBookedServices();
+    }
     document.getElementById('paymentMethods')?.classList.remove('hidden');
     document.getElementById('paymentDemoNotice')?.classList.remove('hidden');
     document.getElementById('checkoutNextStep')?.classList.add('hidden');
@@ -1278,6 +1298,31 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     return bookingsCache;
   }
 
+  function loadGuestBookings() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(GUEST_BOOKINGS_KEY) || '[]');
+      if (!Array.isArray(stored)) throw new Error('Stored guest bookings are not a list.');
+      return stored
+        .filter((booking) => booking && typeof booking.serviceName === 'string')
+        .map((booking) => ({ ...booking, isGuest: true }));
+    } catch (error) {
+      console.error('Unable to load guest bookings:', error);
+      showToast('Could not load saved bookings from this browser.');
+      return [];
+    }
+  }
+
+  function saveGuestBookings() {
+    try {
+      localStorage.setItem(GUEST_BOOKINGS_KEY, JSON.stringify(bookingsCache.filter((booking) => booking.isGuest)));
+      return true;
+    } catch (error) {
+      console.error('Unable to save guest bookings:', error);
+      showToast('Could not save this booking in your browser.');
+      return false;
+    }
+  }
+
   function renderAuthState() {
     const status = document.getElementById('authStatus');
     const signOutButton = document.getElementById('signOutButton');
@@ -1291,7 +1336,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 
   async function loadUserBookings() {
     if (!currentUser || !supabaseClient) {
-      bookingsCache = [];
+      bookingsCache = loadGuestBookings();
       renderBookedServices();
       return;
     }
@@ -1308,14 +1353,17 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       return;
     }
 
-    bookingsCache = data.map((booking) => ({
-      id: booking.id,
-      serviceName: booking.service_name,
-      amount: Number(booking.amount),
-      paymentMethod: booking.payment_method,
-      status: booking.status,
-      date: booking.created_at
-    }));
+    bookingsCache = [
+      ...loadGuestBookings(),
+      ...data.map((booking) => ({
+        id: booking.id,
+        serviceName: booking.service_name,
+        amount: Number(booking.amount),
+        paymentMethod: booking.payment_method,
+        status: booking.status,
+        date: booking.created_at
+      }))
+    ];
     renderBookedServices();
   }
 
@@ -1487,6 +1535,21 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     if (!currentPayment) return;
     if (currentPayment.isCheckout) {
       continueCheckout(paymentMethod);
+      return;
+    }
+
+    if (currentPayment.bookingId) {
+      const booking = bookingsCache.find((item) => item.id === currentPayment.bookingId);
+      if (!booking) {
+        showToast('Could not find this saved booking.');
+        return;
+      }
+      booking.paymentMethod = paymentMethod;
+      if (!saveGuestBookings()) return;
+      closePayment();
+      renderBookedServices();
+      document.getElementById('bookedServices')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showToast((translations[document.documentElement.lang] || translations.en).bookingCreated);
       return;
     }
 
@@ -1908,7 +1971,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
         showToast(`Could not sign out: ${error.message}`);
         return;
       }
-      bookingsCache = [];
+      bookingsCache = loadGuestBookings();
       renderBookedServices();
       showToast('Signed out.');
     });
