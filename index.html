@@ -802,11 +802,11 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       <form id="loginForm">
         <div class="form-group">
           <label for="loginEmail" data-i18n="emailLabel">Email</label>
-          <input id="loginEmail" type="email" placeholder="name@example.com">
+          <input id="loginEmail" type="email" placeholder="name@example.com" autocomplete="email" required>
         </div>
         <div class="form-group">
           <label for="loginPassword" data-i18n="passwordLabel">Password</label>
-          <input id="loginPassword" type="password" placeholder="••••••••">
+          <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" required>
         </div>
         <button class="form-submit" type="submit" data-i18n="loginButton">Login</button>
         <div class="form-msg" id="loginMessage"></div>
@@ -815,19 +815,21 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       <form id="signupForm" class="hidden">
         <div class="form-group">
           <label for="signupName" data-i18n="nameLabel">Full name</label>
-          <input id="signupName" type="text" placeholder="Your name">
+          <input id="signupName" type="text" placeholder="Your name" autocomplete="name" required>
         </div>
         <div class="form-group">
           <label for="signupEmail" data-i18n="emailLabel">Email</label>
-          <input id="signupEmail" type="email" placeholder="name@example.com">
+          <input id="signupEmail" type="email" placeholder="name@example.com" autocomplete="email" required>
         </div>
         <div class="form-group">
           <label for="signupPassword" data-i18n="passwordLabel">Password</label>
-          <input id="signupPassword" type="password" placeholder="Create a password">
+          <input id="signupPassword" type="password" placeholder="Create a password" autocomplete="new-password" minlength="6" required>
         </div>
         <button class="form-submit" type="submit" data-i18n="signupButton">Create account</button>
         <div class="form-msg" id="signupMessage"></div>
       </form>
+      <div class="form-msg" id="authStatus" aria-live="polite"></div>
+      <button class="form-submit hidden" id="signOutButton" type="button">Sign out</button>
     </div>
   </section>
 </div>
@@ -879,7 +881,16 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 <div class="toast" id="toast"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  const SUPABASE_URL = 'https://qzkmmgmvscurbrwucimo.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_vklsys5QpqhB1CD891vf3w_8teQBPJF';
+  const supabaseClient = window.supabase
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+  let currentUser = null;
+  let bookingsCache = [];
+
   const translations = {
     en: {
       siteTitle: 'Home Services',
@@ -1264,8 +1275,118 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   }
 
   function getBookings() {
-    const storedBookings = JSON.parse(localStorage.getItem('easyLifeBookings') || '[]');
-    return Array.isArray(storedBookings) ? storedBookings : [];
+    return bookingsCache;
+  }
+
+  function renderAuthState() {
+    const status = document.getElementById('authStatus');
+    const signOutButton = document.getElementById('signOutButton');
+    const forms = [document.getElementById('loginForm'), document.getElementById('signupForm')];
+    if (status) {
+      status.textContent = currentUser ? `Signed in as ${currentUser.email}` : '';
+    }
+    signOutButton?.classList.toggle('hidden', !currentUser);
+    forms.forEach((form) => form?.classList.toggle('hidden', Boolean(currentUser)));
+  }
+
+  async function loadUserBookings() {
+    if (!currentUser || !supabaseClient) {
+      bookingsCache = [];
+      renderBookedServices();
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('bookings')
+      .select('id, service_name, amount, payment_method, status, created_at')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Unable to load bookings:', error.message);
+      showToast(`Could not load bookings: ${error.message}`);
+      return;
+    }
+
+    bookingsCache = data.map((booking) => ({
+      id: booking.id,
+      serviceName: booking.service_name,
+      amount: Number(booking.amount),
+      paymentMethod: booking.payment_method,
+      status: booking.status,
+      date: booking.created_at
+    }));
+    renderBookedServices();
+  }
+
+  function initializeSupabaseAuth() {
+    if (!supabaseClient) {
+      const message = 'Add your Supabase publishable key in SUPABASE_ANON_KEY to enable account and booking sync.';
+      const loginMessage = document.getElementById('loginMessage');
+      if (loginMessage) loginMessage.textContent = message;
+      return;
+    }
+
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+      currentUser = session?.user || null;
+      renderAuthState();
+      void loadUserBookings();
+    });
+  }
+
+  async function signIn(event) {
+    event.preventDefault();
+    const message = document.getElementById('loginMessage');
+    if (!supabaseClient) {
+      if (message) message.textContent = 'Supabase is not configured. Add the publishable key to enable login.';
+      return;
+    }
+
+    try {
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email: document.getElementById('loginEmail').value.trim(),
+        password: document.getElementById('loginPassword').value
+      });
+      if (error) {
+        if (message) message.textContent = error.message;
+        return;
+      }
+      if (message) message.textContent = 'Signed in successfully.';
+      showToast('Welcome back!');
+    } catch (error) {
+      if (message) message.textContent = `Login failed: ${error.message}`;
+    }
+  }
+
+  async function signUp(event) {
+    event.preventDefault();
+    const message = document.getElementById('signupMessage');
+    if (!supabaseClient) {
+      if (message) message.textContent = 'Supabase is not configured. Add the publishable key to enable sign up.';
+      return;
+    }
+
+    try {
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: document.getElementById('signupEmail').value.trim(),
+        password: document.getElementById('signupPassword').value,
+        options: {
+          data: { full_name: document.getElementById('signupName').value.trim() }
+        }
+      });
+      if (error) {
+        if (message) message.textContent = error.message;
+        return;
+      }
+      if (message) {
+        message.textContent = data.session
+          ? 'Account created and signed in.'
+          : 'Account created. Check your email to confirm it, then sign in.';
+      }
+      showToast(data.session ? 'Account created!' : 'Check your email to confirm your account.');
+    } catch (error) {
+      if (message) message.textContent = `Sign up failed: ${error.message}`;
+    }
   }
 
   function renderBookedServices() {
@@ -1369,20 +1490,44 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       return;
     }
 
-    const bookings = getBookings();
-    bookings.push({
-      serviceName: currentPayment.serviceName,
-      amount: currentPayment.amount,
-      paymentMethod,
-      date: new Date().toISOString()
-    });
-    localStorage.setItem('easyLifeBookings', JSON.stringify(bookings));
+    if (!supabaseClient || !currentUser) {
+      showToast(!supabaseClient ? 'Supabase is not configured.' : 'Sign in before booking a service.');
+      closePayment();
+      if (!currentUser) scrollToLogin();
+      return;
+    }
 
-    currentPayment = null;
-    closePayment();
-    renderBookedServices();
-    document.getElementById('bookedServices')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    showToast((translations[document.documentElement.lang] || translations.en).bookingCreated);
+    const bookingRequest = {
+      user_id: currentUser.id,
+      service_name: currentPayment.serviceName,
+      amount: currentPayment.amount,
+      payment_method: paymentMethod,
+      status: 'pending'
+    };
+    void supabaseClient.from('bookings').insert(bookingRequest).select().single()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Unable to save booking:', error.message);
+          showToast(`Could not save booking: ${error.message}`);
+          return;
+        }
+        bookingsCache.push({
+          id: data.id,
+          serviceName: data.service_name,
+          amount: Number(data.amount),
+          paymentMethod: data.payment_method,
+          status: data.status,
+          date: data.created_at
+        });
+        closePayment();
+        renderBookedServices();
+        document.getElementById('bookedServices')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        showToast((translations[document.documentElement.lang] || translations.en).bookingCreated);
+      })
+      .catch((error) => {
+        console.error('Unable to save booking:', error);
+        showToast(`Could not save booking: ${error.message}`);
+      });
   }
 
   function showToast(message) {
@@ -1408,7 +1553,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       bookingHelp: 'Choose a service, tap “Hire & pay,” then select a payment method. Your booking will appear under Booked services. Payment processing is not connected yet, so bookings remain pending.',
       coverageAnswer: 'Yes! EasyLife serves Kabuga, in Gasabo District, Kigali. If you are nearby and unsure whether we cover your exact location, message our team to confirm.',
       paymentsAnswer: 'The booking screen lists Visa, Mastercard, PayPal, and Mobile money. This demo records your selected method but is not connected to a payment provider, so it cannot charge you or confirm a payment.',
-      noBookings: 'There are no booked services saved in this browser yet. Choose a service and I can help you get started.',
+      noBookings: 'There are no bookings on your account yet. Choose a service and I can help you get started.',
       bookingsAnswer: 'You have %COUNT% saved booking(s)%DETAILS%. Payment is not confirmed in this demo.',
       bookingDetail: '\n• %SERVICE% — $%PRICE% (%METHOD%)',
       contactAnswer: 'Need help from a person? Start a WhatsApp chat with our team:',
@@ -1720,6 +1865,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     updateChatInterface();
     renderBookedServices();
     initializeMap();
+    initializeSupabaseAuth();
 
     document.getElementById('menuToggle')?.addEventListener('click', toggleMobileNavigation);
     document.querySelectorAll('#primaryNavigation a').forEach((link) => {
@@ -1754,22 +1900,17 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       });
     });
 
-    document.getElementById('loginForm')?.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const message = document.getElementById('loginMessage');
-      if (message) {
-        message.textContent = 'Login request sent successfully.';
+    document.getElementById('loginForm')?.addEventListener('submit', signIn);
+    document.getElementById('signupForm')?.addEventListener('submit', signUp);
+    document.getElementById('signOutButton')?.addEventListener('click', async () => {
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) {
+        showToast(`Could not sign out: ${error.message}`);
+        return;
       }
-      showToast('Welcome back!');
-    });
-
-    document.getElementById('signupForm')?.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const message = document.getElementById('signupMessage');
-      if (message) {
-        message.textContent = 'Account created successfully.';
-      }
-      showToast('Account created!');
+      bookingsCache = [];
+      renderBookedServices();
+      showToast('Signed out.');
     });
 
     document.getElementById('chatForm')?.addEventListener('submit', sendChatMessage);
@@ -2005,5 +2146,31 @@ function renderAdminDashboard() {
 </script>
 <div class="footer-note" data-i18n="footerNote">© 2026 EasyLife. Trusted home services for every day life.</div>
 </div>
+<template id="supabase-bookings-schema">
+create table if not exists public.bookings (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  service_name text not null,
+  amount numeric(10, 2) not null check (amount > 0),
+  payment_method text not null,
+  status text not null default 'pending',
+  created_at timestamptz not null default now()
+);
+
+alter table public.bookings enable row level security;
+grant select, insert on public.bookings to authenticated;
+
+drop policy if exists "Users can read their own bookings" on public.bookings;
+create policy "Users can read their own bookings"
+  on public.bookings for select
+  to authenticated
+  using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can create their own bookings" on public.bookings;
+create policy "Users can create their own bookings"
+  on public.bookings for insert
+  to authenticated
+  with check ((select auth.uid()) = user_id);
+</template>
 </body>
 </html>
