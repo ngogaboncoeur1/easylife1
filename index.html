@@ -298,8 +298,10 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 }
 .job-card.hidden { display:none; }
 .job-img {
-  height:170px; background-size:cover; background-position:center; position:relative;
+  height:170px; background:linear-gradient(135deg, var(--primary), var(--primary-light));
+  background-size:cover; background-position:center; position:relative; overflow:hidden;
 }
+.job-img > img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .job-img::after {
   content:''; position:absolute; inset:0;
   background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,.35));
@@ -615,6 +617,29 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 }
 .admin-portal .admin-tab.active { color:#fff; background:var(--primary-light); border-color:var(--primary-light); }
 .admin-portal .admin-simulate { margin-bottom:.5rem; }
+.admin-portal .service-editor { margin:1.25rem 0; }
+.admin-portal .service-editor h3 { margin-bottom:.75rem; color:var(--text); }
+.admin-portal .service-form {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  align-items:end; gap:.75rem; margin-bottom:1rem;
+}
+.admin-portal .service-form label { display:grid; gap:.35rem; color:var(--text-soft); font-size:.85rem; font-weight:600; }
+.admin-portal .service-form input,
+.admin-portal .service-price-input {
+  min-width:0; padding:.65rem .75rem; color:var(--text); background:var(--bg);
+  border:1px solid var(--border); border-radius:8px; font:inherit;
+}
+.admin-portal .service-form button,
+.admin-portal .service-save {
+  padding:.65rem .9rem; color:#fff; background:var(--primary-light);
+  border:0; border-radius:8px; font:inherit; font-weight:700; cursor:pointer;
+}
+.admin-portal .service-save:hover,
+.admin-portal .service-form button:hover { background:var(--primary-hover); }
+.admin-portal .service-message { min-height:1.4rem; margin:.4rem 0; color:var(--text-soft); font-size:.9rem; }
+.admin-portal .service-table { min-width:560px; }
+.admin-portal .service-price-cell { display:flex; align-items:center; gap:.5rem; }
+.admin-portal .service-price-input { width:120px; }
 .admin-portal .admin-table-wrap {
   overflow-x:auto; background:var(--bg); border:1px solid var(--border-soft);
   border-radius:12px;
@@ -740,81 +765,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   <!-- SERVICES -->
   <section class="section" id="services">
     <h2 class="section-title"><i class="fas fa-briefcase"></i> <span data-i18n="jobsTitle">Our services</span></h2>
-
-    <div class="job-grid" id="jobGrid">
-
-      <div class="job-card" data-keywords="plumbing plumber pipe leak drain water wrench amazi">
-        <div class="job-img" style="background-image:url('https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80')">
-          <div class="job-badge"><i class="fas fa-star" style="color:#f1c40f"></i> 4.9</div>
-        </div>
-        <div class="job-body">
-          <h3 data-i18n="jobPlumbTitle">Plumbing</h3>
-          <div class="job-desc" data-i18n="jobPlumbDesc">Leaky faucets, pipe repair, drain unclogging, and fixture installation.</div>
-          <div class="price"><i class="fas fa-tag"></i> <span data-i18n="from">from</span> $45</div>
-          <button class="hire-btn" onclick="openPayment('Plumbing', 45)"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="hirePay">Hire & pay</span></button>
-        </div>
-      </div>
-
-      <div class="job-card" data-keywords="cooking cook chef meal food kitchen dinner prep guteka">
-        <div class="job-img" style="background-image:url('https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80')">
-          <div class="job-badge"><i class="fas fa-star" style="color:#f1c40f"></i> 4.8</div>
-        </div>
-        <div class="job-body">
-          <h3 data-i18n="jobCookTitle">Cooking / Personal Chef</h3>
-          <div class="job-desc" data-i18n="jobCookDesc">Weekly meal prep, dinner parties, or daily cooking.</div>
-          <div class="price"><i class="fas fa-tag"></i> <span data-i18n="from">from</span> $60</div>
-          <button class="hire-btn" onclick="openPayment('Cooking', 60)"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="hirePay">Hire & pay</span></button>
-        </div>
-      </div>
-
-      <div class="job-card" data-keywords="electrical electrician wiring light outlet power bolt amashanyarazi">
-        <div class="job-img" style="background-image:url('https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=800&q=80')">
-          <div class="job-badge"><i class="fas fa-star" style="color:#f1c40f"></i> 4.9</div>
-        </div>
-        <div class="job-body">
-          <h3 data-i18n="jobElecTitle">Electrical</h3>
-          <div class="job-desc" data-i18n="jobElecDesc">Lighting, outlets, breaker issues, smart home installs.</div>
-          <div class="price"><i class="fas fa-tag"></i> <span data-i18n="from">from</span> $70</div>
-          <button class="hire-btn" onclick="openPayment('Electrical', 70)"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="hirePay">Hire & pay</span></button>
-        </div>
-      </div>
-
-      <div class="job-card" data-keywords="cleaning clean maid housekeeping broom tidy isuku">
-        <div class="job-img" style="background-image:url('https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80')">
-          <div class="job-badge"><i class="fas fa-star" style="color:#f1c40f"></i> 4.7</div>
-        </div>
-        <div class="job-body">
-          <h3 data-i18n="jobCleanTitle">Home Cleaning</h3>
-          <div class="job-desc" data-i18n="jobCleanDesc">Deep cleaning, move-in/out, regular housekeeping.</div>
-          <div class="price"><i class="fas fa-tag"></i> <span data-i18n="from">from</span> $35</div>
-          <button class="hire-btn" onclick="openPayment('Cleaning', 35)"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="hirePay">Hire & pay</span></button>
-        </div>
-      </div>
-
-      <div class="job-card" data-keywords="handyman repair hammer assemble mount furniture">
-        <div class="job-img" style="background-image:url('https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=80')">
-          <div class="job-badge"><i class="fas fa-star" style="color:#f1c40f"></i> 4.8</div>
-        </div>
-        <div class="job-body">
-          <h3 data-i18n="jobHandyTitle">Handyman</h3>
-          <div class="job-desc" data-i18n="jobHandyDesc">Furniture assembly, wall mounting, small repairs, odd jobs.</div>
-          <div class="price"><i class="fas fa-tag"></i> <span data-i18n="from">from</span> $50</div>
-          <button class="hire-btn" onclick="openPayment('Handyman', 50)"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="hirePay">Hire & pay</span></button>
-        </div>
-      </div>
-
-      <div class="job-card" data-keywords="gardening garden lawn mow leaf plant tree trim ubusitani">
-        <div class="job-img" style="background-image:url('https://images.unsplash.com/photo-1558904541-efa843a96f01?auto=format&fit=crop&w=800&q=80')">
-          <div class="job-badge"><i class="fas fa-star" style="color:#f1c40f"></i> 4.7</div>
-        </div>
-        <div class="job-body">
-          <h3 data-i18n="jobGardenTitle">Gardening</h3>
-          <div class="job-desc" data-i18n="jobGardenDesc">Lawn care, trimming, planting, and seasonal garden upkeep.</div>
-          <div class="price"><i class="fas fa-tag"></i> <span data-i18n="from">from</span> $40</div>
-          <button class="hire-btn" onclick="openPayment('Gardening', 40)"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="hirePay">Hire & pay</span></button>
-        </div>
-      </div>
-    </div>
+    <div class="job-grid" id="jobGrid"></div>
 
     <div class="no-results" id="noResults">No services match your search.</div>
   </section>
@@ -957,6 +908,16 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     : null;
   const GUEST_BOOKINGS_KEY = 'easyLifeGuestBookings';
+  const SERVICE_CATALOG_KEY = 'easyLifeServices';
+  const DEFAULT_SERVICE_CATALOG = [
+    { id: 'plumbing', name: 'Plumbing', bookingName: 'Plumbing', description: 'Leaky faucets, pipe repair, drain unclogging, and fixture installation.', price: 45, keywords: 'plumbing plumber pipe leak drain water wrench amazi', titleKey: 'jobPlumbTitle', descriptionKey: 'jobPlumbDesc', image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80', rating: '4.9', aliases: ['plumbing', 'plumber', 'pipe', 'leak', 'drain', 'amazi', 'plomberie', 'plombier'] },
+    { id: 'cooking', name: 'Cooking / Personal Chef', bookingName: 'Cooking', description: 'Weekly meal prep, dinner parties, or daily cooking.', price: 60, keywords: 'cooking cook chef meal food kitchen dinner prep guteka', titleKey: 'jobCookTitle', descriptionKey: 'jobCookDesc', image: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80', rating: '4.8', aliases: ['cooking', 'cook', 'chef', 'meal', 'food', 'guteka', 'cuisine', 'cuisinier'] },
+    { id: 'electrical', name: 'Electrical', bookingName: 'Electrical', description: 'Lighting, outlets, breaker issues, smart home installs.', price: 70, keywords: 'electrical electrician wiring light outlet power bolt amashanyarazi', titleKey: 'jobElecTitle', descriptionKey: 'jobElecDesc', image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=800&q=80', rating: '4.9', aliases: ['electrical', 'electrician', 'wiring', 'outlet', 'electricity', 'amashanyarazi', 'électricité', 'electricien'] },
+    { id: 'cleaning', name: 'Home Cleaning', bookingName: 'Cleaning', description: 'Deep cleaning, move-in/out, regular housekeeping.', price: 35, keywords: 'cleaning clean maid housekeeping broom tidy isuku', titleKey: 'jobCleanTitle', descriptionKey: 'jobCleanDesc', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80', rating: '4.7', aliases: ['cleaning', 'cleaner', 'clean', 'maid', 'isuku', 'nettoyage', 'ménage'] },
+    { id: 'handyman', name: 'Handyman', bookingName: 'Handyman', description: 'Furniture assembly, wall mounting, small repairs, odd jobs.', price: 50, keywords: 'handyman repair hammer assemble mount furniture', titleKey: 'jobHandyTitle', descriptionKey: 'jobHandyDesc', image: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=80', rating: '4.8', aliases: ['handyman', 'repair', 'furniture', 'mount', 'fix', 'bricolage', 'réparation'] },
+    { id: 'gardening', name: 'Gardening', bookingName: 'Gardening', description: 'Lawn care, trimming, planting, and seasonal garden upkeep.', price: 40, keywords: 'gardening garden lawn mow leaf plant tree trim ubusitani', titleKey: 'jobGardenTitle', descriptionKey: 'jobGardenDesc', image: 'https://images.unsplash.com/photo-1558904541-efa843a96f01?auto=format&fit=crop&w=800&q=80', rating: '4.7', aliases: ['gardening', 'garden', 'lawn', 'plant', 'ubusitani', 'jardinage', 'jardin'] }
+  ];
+  let serviceCatalog = [];
   let currentUser = null;
   let bookingsCache = loadGuestBookings();
   let memoryStatusKey = 'gameReady';
@@ -1223,6 +1184,162 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       footerNote: '© 2026 EasyLife. Des services à domicile fiables pour chaque jour.'
     }
   };
+
+  function getServiceCatalog() {
+    return serviceCatalog;
+  }
+
+  function getServiceTitle(service, locale = translations[document.documentElement.lang] || translations.en) {
+    return service.titleKey && locale[service.titleKey] ? locale[service.titleKey] : service.name;
+  }
+
+  function persistServiceCatalog(nextCatalog) {
+    localStorage.setItem(SERVICE_CATALOG_KEY, JSON.stringify(nextCatalog));
+    serviceCatalog = nextCatalog;
+    renderServiceCatalog();
+  }
+
+  function initializeServiceCatalog() {
+    try {
+      const savedCatalog = localStorage.getItem(SERVICE_CATALOG_KEY);
+      if (savedCatalog === null) {
+        persistServiceCatalog(DEFAULT_SERVICE_CATALOG.map((service) => ({ ...service })));
+        return;
+      }
+
+      const parsedCatalog = JSON.parse(savedCatalog);
+      if (!Array.isArray(parsedCatalog) || parsedCatalog.some((service) =>
+        !service || typeof service.id !== 'string' || typeof service.name !== 'string' ||
+        typeof service.description !== 'string' || !Number.isFinite(Number(service.price)) || Number(service.price) <= 0
+      )) {
+        throw new Error('Saved service catalog has an invalid format.');
+      }
+      serviceCatalog = parsedCatalog;
+      renderServiceCatalog();
+    } catch (error) {
+      console.error('Unable to initialize saved services:', error);
+      serviceCatalog = DEFAULT_SERVICE_CATALOG.map((service) => ({ ...service }));
+      renderServiceCatalog();
+      showToast('Saved services could not be initialized. Browser data was not changed.');
+    }
+  }
+
+  function renderServiceCatalog() {
+    const grid = document.getElementById('jobGrid');
+    if (!grid) return;
+
+    const locale = translations[document.documentElement.lang] || translations.en;
+    grid.replaceChildren();
+    serviceCatalog.forEach((service) => {
+      const card = document.createElement('article');
+      card.className = 'job-card';
+      card.dataset.keywords = `${service.name} ${service.description} ${service.keywords || ''}`.toLowerCase();
+
+      const image = document.createElement('div');
+      image.className = 'job-img';
+      const imageUrl = getSafeServiceImageUrl(service.image);
+      if (imageUrl) {
+        const photo = document.createElement('img');
+        photo.src = imageUrl;
+        photo.alt = '';
+        photo.loading = 'lazy';
+        image.appendChild(photo);
+      }
+      const badge = document.createElement('div');
+      badge.className = 'job-badge';
+      if (service.rating) {
+        const star = document.createElement('i');
+        star.className = 'fas fa-star';
+        star.style.color = '#f1c40f';
+        badge.append(star, document.createTextNode(` ${service.rating}`));
+      } else {
+        badge.textContent = 'New';
+      }
+      image.appendChild(badge);
+
+      const body = document.createElement('div');
+      body.className = 'job-body';
+      const title = document.createElement('h3');
+      if (service.titleKey) title.dataset.i18n = service.titleKey;
+      title.textContent = getServiceTitle(service, locale);
+      const description = document.createElement('div');
+      description.className = 'job-desc';
+      if (service.descriptionKey) description.dataset.i18n = service.descriptionKey;
+      description.textContent = service.descriptionKey && locale[service.descriptionKey]
+        ? locale[service.descriptionKey]
+        : service.description;
+      const price = document.createElement('div');
+      price.className = 'price';
+      const tag = document.createElement('i');
+      tag.className = 'fas fa-tag';
+      const from = document.createElement('span');
+      from.dataset.i18n = 'from';
+      from.textContent = locale.from;
+      price.append(tag, from, document.createTextNode(` $${Number(service.price)}`));
+      const button = document.createElement('button');
+      button.className = 'hire-btn';
+      button.type = 'button';
+      const hireIcon = document.createElement('i');
+      hireIcon.className = 'fas fa-hand-holding-usd';
+      const hireLabel = document.createElement('span');
+      hireLabel.dataset.i18n = 'hirePay';
+      hireLabel.textContent = locale.hirePay;
+      button.append(hireIcon, hireLabel);
+      button.addEventListener('click', () => openPayment(service.bookingName || service.name, Number(service.price)));
+      body.append(title, description, price, button);
+      card.append(image, body);
+      grid.appendChild(card);
+    });
+    filterJobs();
+  }
+
+  function getSafeServiceImageUrl(value) {
+    if (typeof value !== 'string' || !value.trim()) return '';
+    try {
+      const url = new URL(value.trim());
+      return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+    } catch {
+      return '';
+    }
+  }
+
+  function createService(name, description, price, keywords, imageUrl) {
+    const cleanName = name.trim();
+    const cleanDescription = description.trim();
+    const cleanKeywords = keywords.trim();
+    const enteredImageUrl = (imageUrl || '').trim();
+    const amount = Number(price);
+    if (!cleanName || cleanName.length > 80) throw new Error('Service name must be between 1 and 80 characters.');
+    if (!cleanDescription || cleanDescription.length > 280) throw new Error('Description must be between 1 and 280 characters.');
+    if (!Number.isFinite(amount) || amount <= 0) throw new Error('Price must be a number greater than zero.');
+    const cleanImageUrl = enteredImageUrl ? getSafeServiceImageUrl(enteredImageUrl) : '';
+    if (enteredImageUrl && !cleanImageUrl) throw new Error('Image URL must be a valid HTTP or HTTPS URL.');
+
+    const id = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `service-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const newService = {
+      id,
+      name: cleanName,
+      bookingName: cleanName,
+      description: cleanDescription,
+      price: amount,
+      image: cleanImageUrl,
+      keywords: cleanKeywords || `${cleanName} ${cleanDescription}`,
+      aliases: [cleanName.toLowerCase(), ...cleanKeywords.toLowerCase().split(/\s+/).filter(Boolean)]
+    };
+    persistServiceCatalog([...serviceCatalog, newService]);
+  }
+
+  function updateServicePrice(id, price) {
+    const amount = Number(price);
+    if (!Number.isFinite(amount) || amount <= 0) throw new Error('Price must be a number greater than zero.');
+    const nextCatalog = serviceCatalog.map((service) =>
+      service.id === id ? { ...service, price: amount } : service
+    );
+    if (!nextCatalog.some((service) => service.id === id)) throw new Error('This service no longer exists.');
+    persistServiceCatalog(nextCatalog);
+  }
 
   function applyTranslations(lang) {
     const locale = translations[lang] || translations.en;
@@ -1937,14 +2054,12 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     }
   };
 
-  const chatServices = [
-    { id: 'plumbing', titleKey: 'jobPlumbTitle', descriptionKey: 'jobPlumbDesc', price: 45, aliases: ['plumbing', 'plumber', 'pipe', 'leak', 'drain', 'amazi', 'plomberie', 'plombier'] },
-    { id: 'cooking', titleKey: 'jobCookTitle', descriptionKey: 'jobCookDesc', price: 60, aliases: ['cooking', 'cook', 'chef', 'meal', 'food', 'guteka', 'cuisine', 'cuisinier'] },
-    { id: 'electrical', titleKey: 'jobElecTitle', descriptionKey: 'jobElecDesc', price: 70, aliases: ['electrical', 'electrician', 'wiring', 'outlet', 'electricity', 'amashanyarazi', 'électricité', 'electricien'] },
-    { id: 'cleaning', titleKey: 'jobCleanTitle', descriptionKey: 'jobCleanDesc', price: 35, aliases: ['cleaning', 'cleaner', 'clean', 'maid', 'isuku', 'nettoyage', 'ménage'] },
-    { id: 'handyman', titleKey: 'jobHandyTitle', descriptionKey: 'jobHandyDesc', price: 50, aliases: ['handyman', 'repair', 'furniture', 'mount', 'fix', 'bricolage', 'réparation'] },
-    { id: 'gardening', titleKey: 'jobGardenTitle', descriptionKey: 'jobGardenDesc', price: 40, aliases: ['gardening', 'garden', 'lawn', 'plant', 'ubusitani', 'jardinage', 'jardin'] }
-  ];
+  function getChatServices() {
+    return getServiceCatalog().map((service) => ({
+      ...service,
+      aliases: service.aliases || [service.name.toLowerCase(), ...(service.keywords || '').toLowerCase().split(/\s+/).filter(Boolean)]
+    }));
+  }
 
   function getChatLocale() {
     return chatCopy[document.documentElement.lang] || chatCopy.en;
@@ -2022,21 +2137,23 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     const locale = getChatLocale();
     const pageLocale = translations[document.documentElement.lang] || translations.en;
     addChatMessage(locale.serviceQuestion, 'bot');
-    addChatOptions(chatServices.map((service) => ({
+    addChatOptions(getChatServices().map((service) => ({
       action: 'choose-service',
       serviceId: service.id,
-      label: `${pageLocale[service.titleKey]} · from $${service.price}`
+      label: `${getServiceTitle(service, pageLocale)} · from $${service.price}`
     })));
   }
 
   function selectChatService(serviceId) {
-    const service = chatServices.find((item) => item.id === serviceId);
+    const service = getChatServices().find((item) => item.id === serviceId);
     if (!service) return;
 
     const locale = getChatLocale();
     const pageLocale = translations[document.documentElement.lang] || translations.en;
-    const serviceName = pageLocale[service.titleKey];
-    const description = pageLocale[service.descriptionKey];
+    const serviceName = getServiceTitle(service, pageLocale);
+    const description = service.descriptionKey && pageLocale[service.descriptionKey]
+      ? pageLocale[service.descriptionKey]
+      : service.description;
     addChatMessage(locale.serviceDetails
       .replace('%SERVICE%', serviceName)
       .replace('%DESCRIPTION%', description)
@@ -2051,20 +2168,21 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   function handleChatAction(action, serviceId) {
     const locale = getChatLocale();
     if (action === 'choose-service') {
-      const service = chatServices.find((item) => item.id === serviceId);
+      const service = getChatServices().find((item) => item.id === serviceId);
       if (!service) return;
       const pageLocale = translations[document.documentElement.lang] || translations.en;
-      addChatMessage(pageLocale[service.titleKey], 'user');
+      addChatMessage(getServiceTitle(service, pageLocale), 'user');
       selectChatService(serviceId);
     } else if (action === 'book-service') {
-      const service = chatServices.find((item) => item.id === serviceId);
+      const service = getChatServices().find((item) => item.id === serviceId);
       if (!service) return;
       const pageLocale = translations[document.documentElement.lang] || translations.en;
+      const serviceName = getServiceTitle(service, pageLocale);
       addChatMessage(locale.bookService
-        .replace('%SERVICE%', pageLocale[service.titleKey])
+        .replace('%SERVICE%', serviceName)
         .replace('%PRICE%', service.price), 'user');
       addChatMessage(locale.bookingHelp, 'bot');
-      openPayment(pageLocale[service.titleKey], service.price);
+      openPayment(service.bookingName || service.name, service.price);
     } else if (action === 'services') {
       addChatMessage(locale.services, 'user');
       showServiceOptions();
@@ -2114,7 +2232,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   function respondToChatMessage(message) {
     const locale = getChatLocale();
     const normalized = message.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-    const service = chatServices.find((item) => item.aliases.some((alias) => normalized.includes(alias)));
+    const service = getChatServices().find((item) => item.aliases.some((alias) => normalized.includes(alias)));
     if (service) {
       selectChatService(service.id);
     } else if (/\b(kabuga|location|area|where|work in|serve|nearby|district|zone)\b/.test(normalized)) {
@@ -2189,6 +2307,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('easyLifeTheme') || 'light';
     const savedLang = localStorage.getItem('easyLifeLang') || 'en';
+    initializeServiceCatalog();
     setTheme(savedTheme, false);
     applyTranslations(savedLang);
     updateChatInterface();
@@ -2281,9 +2400,41 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     <div class="admin-tabs">
       <button class="admin-tab active" type="button" data-admin-tab="logins" onclick="switchAdminTab('logins')">User Logins</button>
       <button class="admin-tab" type="button" data-admin-tab="jobs" onclick="switchAdminTab('jobs')">Job Purchases</button>
+      <button class="admin-tab" type="button" data-admin-tab="services" onclick="switchAdminTab('services')">Services &amp; Pricing</button>
     </div>
     <button class="admin-simulate" type="button" onclick="simulateData()">Simulate New Activity</button>
-    <input type="search" class="admin-search" id="adminSearchBar" placeholder="Search activity..." oninput="renderAdminDashboard()" />
+    <input type="search" class="admin-search" id="adminSearchBar" placeholder="Search dashboard..." oninput="renderAdminDashboard()" />
+    <div id="adminServicesPanel" hidden>
+      <div class="service-editor">
+        <h3>Add a service</h3>
+        <form class="service-form" id="newServiceForm" onsubmit="submitNewService(event)">
+          <label>Service name
+            <input id="newServiceName" type="text" maxlength="80" required />
+          </label>
+          <label>Description
+            <input id="newServiceDescription" type="text" maxlength="280" required />
+          </label>
+          <label>Starting price ($)
+            <input id="newServicePrice" type="number" min="0.01" step="0.01" required />
+          </label>
+          <label>Image URL (optional)
+            <input id="newServiceImage" type="url" maxlength="2048" placeholder="https://example.com/image.jpg" />
+          </label>
+          <label>Search keywords (optional)
+            <input id="newServiceKeywords" type="text" maxlength="160" />
+          </label>
+          <button type="submit">Add service</button>
+        </form>
+        <p class="service-message" id="serviceAdminMessage" role="status" aria-live="polite"></p>
+        <p class="admin-demo-note">Service changes are saved in this browser and appear in the public service list and chat.</p>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="service-table">
+          <thead><tr><th>Service</th><th>Description</th><th>Starting price</th></tr></thead>
+          <tbody id="serviceCatalogBody"></tbody>
+        </table>
+      </div>
+    </div>
     <div class="admin-table-wrap" id="adminLoginsTable">
       <table>
         <thead><tr><th>#</th><th>Name</th><th>Email</th><th>IP Address</th><th>Device</th><th>Location</th><th>Time</th><th>Status</th></tr></thead>
@@ -2355,6 +2506,80 @@ function switchAdminTab(tab) {
   });
   document.getElementById("adminLoginsTable").hidden = tab !== "logins";
   document.getElementById("adminJobsTable").hidden = tab !== "jobs";
+  document.getElementById("adminServicesPanel").hidden = tab !== "services";
+}
+
+function renderAdminServices(query = "") {
+  const body = document.getElementById("serviceCatalogBody");
+  const normalizedQuery = query.toLowerCase();
+  const services = getServiceCatalog().filter((service) =>
+    !normalizedQuery || `${service.name} ${service.description}`.toLowerCase().includes(normalizedQuery)
+  );
+  body.replaceChildren();
+
+  if (!services.length) {
+    const emptyRow = document.createElement("tr");
+    const emptyCell = document.createElement("td");
+    emptyCell.colSpan = 3;
+    emptyCell.className = "admin-empty";
+    emptyCell.textContent = "No services found";
+    emptyRow.appendChild(emptyCell);
+    body.appendChild(emptyRow);
+    return;
+  }
+
+  services.forEach((service) => {
+    const row = document.createElement("tr");
+    const nameCell = document.createElement("td");
+    nameCell.textContent = service.name;
+    const descriptionCell = document.createElement("td");
+    descriptionCell.textContent = service.description;
+    const priceCell = document.createElement("td");
+    priceCell.className = "service-price-cell";
+    const priceInput = document.createElement("input");
+    priceInput.className = "service-price-input";
+    priceInput.type = "number";
+    priceInput.min = "0.01";
+    priceInput.step = "0.01";
+    priceInput.value = String(service.price);
+    priceInput.setAttribute("aria-label", `Starting price for ${service.name}`);
+    const saveButton = document.createElement("button");
+    saveButton.className = "service-save";
+    saveButton.type = "button";
+    saveButton.textContent = "Save price";
+    saveButton.addEventListener("click", () => {
+      const message = document.getElementById("serviceAdminMessage");
+      try {
+        updateServicePrice(service.id, priceInput.value);
+        message.textContent = `Updated ${service.name}. The public service listing and booking price are now $${Number(priceInput.value)}.`;
+        renderAdminDashboard();
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    });
+    priceCell.append(priceInput, saveButton);
+    row.append(nameCell, descriptionCell, priceCell);
+    body.appendChild(row);
+  });
+}
+
+function submitNewService(event) {
+  event.preventDefault();
+  const message = document.getElementById("serviceAdminMessage");
+  try {
+    createService(
+      document.getElementById("newServiceName").value,
+      document.getElementById("newServiceDescription").value,
+      document.getElementById("newServicePrice").value,
+      document.getElementById("newServiceKeywords").value,
+      document.getElementById("newServiceImage").value
+    );
+    document.getElementById("newServiceForm").reset();
+    message.textContent = "Service added to the public listings.";
+    renderAdminDashboard();
+  } catch (error) {
+    message.textContent = error.message;
+  }
 }
 
 /* ---------- SEED DEMO DATA ---------- */
@@ -2472,6 +2697,7 @@ function renderAdminDashboard() {
   document.getElementById("statRevenue").textContent = "$" + allJobs
     .filter(j => j.status === "success")
     .reduce((sum, j) => sum + j.amount, 0);
+  renderAdminServices(query);
 }
 </script>
 <div class="footer-note" data-i18n="footerNote">© 2026 EasyLife. Trusted home services for every day life.</div>
