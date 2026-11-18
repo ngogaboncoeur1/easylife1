@@ -527,6 +527,33 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
+/* OPTIONAL USAGE ANALYTICS CONSENT */
+.analytics-consent {
+  position:fixed; z-index:1900; left:1rem; right:1rem; bottom:1rem;
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  max-width:900px; margin:0 auto; padding:1rem 1.2rem;
+  color:var(--text); background:var(--card-bg); border:1px solid var(--border);
+  border-radius:16px; box-shadow:var(--shadow-lg);
+}
+.analytics-consent[hidden] { display:none; }
+.analytics-consent p { color:var(--text-soft); font-size:.88rem; line-height:1.45; }
+.analytics-consent-actions { display:flex; flex-shrink:0; gap:.5rem; }
+.analytics-consent button {
+  padding:.6rem .85rem; border:1px solid var(--border); border-radius:9px;
+  color:var(--text); background:var(--bg); font:inherit; font-weight:700; cursor:pointer;
+}
+.analytics-consent button:first-child { color:#fff; background:var(--primary-light); border-color:var(--primary-light); }
+.analytics-consent button:focus-visible { outline:3px solid var(--primary-light); outline-offset:2px; }
+.privacy-settings {
+  display:block; margin:.5rem auto 1rem; padding:.4rem .7rem;
+  color:var(--text-muted); background:transparent; border:0; font:inherit;
+  font-size:.8rem; text-decoration:underline; cursor:pointer;
+}
+@media (max-width:700px) {
+  .analytics-consent { left:.5rem; right:.5rem; bottom:.5rem; align-items:stretch; flex-direction:column; }
+  .analytics-consent-actions { justify-content:flex-end; }
+}
+
 /* FOOTER */
 .footer-note {
   text-align:center; margin-top:2rem; padding:2rem 1rem 3rem;
@@ -583,14 +610,12 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .admin-portal .admin-field:focus,
 .admin-portal .admin-search:focus { outline:2px solid var(--primary-light); }
 .admin-portal .admin-login button,
-.admin-portal .admin-logout,
-.admin-portal .admin-simulate {
+.admin-portal .admin-logout {
   padding:.7rem 1rem; border:0; border-radius:10px; color:#fff;
   background:var(--primary-light); font:inherit; font-weight:700; cursor:pointer;
 }
 .admin-portal .admin-login button { width:100%; }
-.admin-portal .admin-login button:hover,
-.admin-portal .admin-simulate:hover { background:var(--primary-hover); }
+.admin-portal .admin-login button:hover { background:var(--primary-hover); }
 .admin-portal .admin-error { min-height:1.3rem; color:var(--error-text); font-size:.9rem; }
 .admin-portal .admin-demo-note { font-size:.8rem; text-align:center; }
 .admin-portal .admin-dashboard { display:none; }
@@ -616,7 +641,6 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   border:1px solid var(--border); border-radius:10px; cursor:pointer; font:inherit;
 }
 .admin-portal .admin-tab.active { color:#fff; background:var(--primary-light); border-color:var(--primary-light); }
-.admin-portal .admin-simulate { margin-bottom:.5rem; }
 .admin-portal .service-editor { margin:1.25rem 0; }
 .admin-portal .service-editor h3 { margin-bottom:.75rem; color:var(--text); }
 .admin-portal .service-form {
@@ -909,6 +933,11 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     : null;
   const GUEST_BOOKINGS_KEY = 'easyLifeGuestBookings';
   const SERVICE_CATALOG_KEY = 'easyLifeServices';
+  const ANALYTICS_CONSENT_KEY = 'easyLifeAnalyticsConsent';
+  const ANALYTICS_SESSION_KEY = 'easyLifeAnalyticsSession';
+  const ALLOWED_USAGE_EVENTS = new Set(['page_view', 'service_view', 'booking_started', 'booking_created', 'sign_in', 'sign_up', 'sign_out']);
+  let analyticsConsent = null;
+  let analyticsSessionId = null;
   const DEFAULT_SERVICE_CATALOG = [
     { id: 'plumbing', name: 'Plumbing', bookingName: 'Plumbing', description: 'Leaky faucets, pipe repair, drain unclogging, and fixture installation.', price: 45, keywords: 'plumbing plumber pipe leak drain water wrench amazi', titleKey: 'jobPlumbTitle', descriptionKey: 'jobPlumbDesc', image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80', rating: '4.9', aliases: ['plumbing', 'plumber', 'pipe', 'leak', 'drain', 'amazi', 'plomberie', 'plombier'] },
     { id: 'cooking', name: 'Cooking / Personal Chef', bookingName: 'Cooking', description: 'Weekly meal prep, dinner parties, or daily cooking.', price: 60, keywords: 'cooking cook chef meal food kitchen dinner prep guteka', titleKey: 'jobCookTitle', descriptionKey: 'jobCookDesc', image: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80', rating: '4.8', aliases: ['cooking', 'cook', 'chef', 'meal', 'food', 'guteka', 'cuisine', 'cuisinier'] },
@@ -929,6 +958,86 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   let memoryFirstCard = null;
   let memoryLocked = false;
   let memoryStarted = false;
+
+  function createAnalyticsSessionId() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+      const random = Math.floor(Math.random() * 16);
+      return (char === 'x' ? random : (random & 0x3) | 0x8).toString(16);
+    });
+  }
+
+  async function recordUsageEvent(eventName, entityId = null, userId = currentUser?.id || null) {
+    if (analyticsConsent !== true || !ALLOWED_USAGE_EVENTS.has(eventName)) return;
+    if (!supabaseClient) {
+      console.error('Unable to record site usage: Supabase is not configured.');
+      return;
+    }
+
+    let sessionId = analyticsSessionId;
+    if (!sessionId) {
+      try {
+        const savedSessionId = sessionStorage.getItem(ANALYTICS_SESSION_KEY);
+        sessionId = savedSessionId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(savedSessionId)
+          ? savedSessionId
+          : null;
+        if (!sessionId) {
+          sessionId = createAnalyticsSessionId();
+          sessionStorage.setItem(ANALYTICS_SESSION_KEY, sessionId);
+        }
+      } catch (error) {
+        console.error('Unable to persist the analytics session ID:', error);
+        sessionId = createAnalyticsSessionId();
+      }
+      analyticsSessionId = sessionId;
+    }
+
+    const pagePath = window.location.protocol === 'file:' ? '/' : window.location.pathname.slice(0, 200);
+    try {
+      const { error } = await supabaseClient.from('usage_events').insert({
+        session_id: sessionId,
+        user_id: userId,
+        event_name: eventName,
+        page_path: pagePath || '/',
+        entity_id: typeof entityId === 'string' ? entityId.slice(0, 100) : null
+      });
+      if (error) console.error('Unable to record site usage:', error.message);
+    } catch (error) {
+      console.error('Unable to record site usage:', error);
+    }
+  }
+
+  function setAnalyticsConsent(granted) {
+    analyticsConsent = granted;
+    try {
+      localStorage.setItem(ANALYTICS_CONSENT_KEY, granted ? 'accepted' : 'rejected');
+    } catch (error) {
+      console.error('Unable to save analytics consent:', error);
+    }
+    if (!granted) {
+      try {
+        sessionStorage.removeItem(ANALYTICS_SESSION_KEY);
+        analyticsSessionId = null;
+      } catch (error) {
+        console.error('Unable to clear the analytics session ID:', error);
+      }
+    }
+    document.getElementById('analyticsConsent')?.setAttribute('hidden', '');
+    if (granted) void recordUsageEvent('page_view');
+  }
+
+  function initializeUsageAnalytics() {
+    let savedConsent = null;
+    try {
+      savedConsent = localStorage.getItem(ANALYTICS_CONSENT_KEY);
+    } catch (error) {
+      console.error('Unable to read analytics consent:', error);
+    }
+
+    analyticsConsent = savedConsent === 'accepted' ? true : savedConsent === 'rejected' ? false : null;
+    document.getElementById('analyticsConsent')?.toggleAttribute('hidden', analyticsConsent !== null);
+    if (analyticsConsent) void recordUsageEvent('page_view');
+  }
 
   const translations = {
     en: {
@@ -983,6 +1092,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       loginButton: 'Login',
       nameLabel: 'Full name',
       signupButton: 'Create account',
+      signupEmailRateLimit: 'Supabase has temporarily limited signup emails. Try again later, or configure a custom SMTP provider in Supabase Dashboard → Authentication → SMTP Settings. If you already have an account, sign in.',
       paymentTitle: 'Pay for service',
       paymentSummary: 'Complete your booking securely.',
       paymentDemoNotice: 'Demo only: payment providers are not connected, so no payment will be charged or confirmed.',
@@ -1012,6 +1122,10 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       gameCard: 'Card',
       gameCardHidden: 'hidden',
       gameCardMatched: 'matched',
+      analyticsConsentText: 'Allow privacy-friendly analytics? If you accept, EasyLife records page visits and key actions (service views, booking starts, and sign-ins) in Supabase using a temporary browser session ID. Account and booking events may include your Supabase user ID. We do not collect IP addresses, names, email addresses, or form/chat contents.',
+      analyticsAccept: 'Accept analytics',
+      analyticsReject: 'Reject',
+      privacySettings: 'Privacy settings',
       closeBtn: 'Close',
       footerNote: '© 2026 EasyLife. Trusted home services for every day life.'
     },
@@ -1067,6 +1181,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       loginButton: 'Injira',
       nameLabel: 'Amazina',
       signupButton: 'Fungura konti',
+      signupEmailRateLimit: 'Supabase yahagaritse by’agateganyo kohereza ubutumwa bwo kwemeza konti. Ongera ugerageze nyuma, cyangwa ushyireho SMTP yihariye muri Supabase Dashboard → Authentication → SMTP Settings. Niba usanzwe ufite konti, injira.',
       paymentTitle: 'Kwishyura serivisi',
       paymentSummary: 'Kuzuza gahunda yawe yizewe.',
       paymentDemoNotice: 'Iyi ni demo gusa: uburyo bwo kwishyura ntibwahujwe, bityo nta mafaranga yishyurwa cyangwa yemezwa.',
@@ -1096,6 +1211,10 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       gameCard: 'Ikarita',
       gameCardHidden: 'ihishe',
       gameCardMatched: 'yahujwe',
+      analyticsConsentText: 'Wemera isesengura ridakusanya amakuru akuranga? Niwemera, EasyLife izabika gusura paji n’ibikorwa by’ingenzi (kureba serivisi, gutangira gahunda no kwinjira) muri Supabase ikoresheje nimero y’agateganyo ya browser. Ibikorwa bya konti na gahunda bishobora kubika nimero ya konti yawe ya Supabase. Ntabwo tubika aderesi ya IP, amazina, imeyili cyangwa ibyo wanditse mu mafishi no mu kiganiro.',
+      analyticsAccept: 'Emera isesengura',
+      analyticsReject: 'Kwanga',
+      privacySettings: 'Igenamiterere ry’ibanga',
       closeBtn: 'Funga',
       footerNote: '© 2026 EasyLife. Serivisi zizawe ku buzima bwa buri munsi.'
     },
@@ -1151,6 +1270,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       loginButton: 'Connexion',
       nameLabel: 'Nom complet',
       signupButton: 'Créer un compte',
+      signupEmailRateLimit: 'Supabase a temporairement limité les e-mails d’inscription. Réessayez plus tard ou configurez un serveur SMTP personnalisé dans Supabase Dashboard → Authentication → SMTP Settings. Si vous avez déjà un compte, connectez-vous.',
       paymentTitle: 'Payer le service',
       paymentSummary: 'Complétez votre réservation en toute sécurité.',
       paymentDemoNotice: 'Démo uniquement : les prestataires de paiement ne sont pas connectés. Aucun paiement ne sera débité ni confirmé.',
@@ -1180,6 +1300,10 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       gameCard: 'Carte',
       gameCardHidden: 'cachée',
       gameCardMatched: 'associée',
+      analyticsConsentText: 'Autoriser les statistiques respectueuses de la vie privée ? Si vous acceptez, EasyLife enregistre dans Supabase les visites et actions principales (consultation de services, début de réservation et connexion) avec un identifiant temporaire du navigateur. Les événements de compte et de réservation peuvent inclure votre identifiant utilisateur Supabase. Nous ne collectons ni adresse IP, ni nom, ni e-mail, ni contenu de formulaire ou de chat.',
+      analyticsAccept: 'Accepter',
+      analyticsReject: 'Refuser',
+      privacySettings: 'Confidentialité',
       closeBtn: 'Fermer',
       footerNote: '© 2026 EasyLife. Des services à domicile fiables pour chaque jour.'
     }
@@ -1285,7 +1409,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       hireLabel.dataset.i18n = 'hirePay';
       hireLabel.textContent = locale.hirePay;
       button.append(hireIcon, hireLabel);
-      button.addEventListener('click', () => openPayment(service.bookingName || service.name, Number(service.price)));
+      button.addEventListener('click', () => openPayment(service.bookingName || service.name, Number(service.price), service.id));
       body.append(title, description, price, button);
       card.append(image, body);
       grid.appendChild(card);
@@ -1577,8 +1701,9 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 
   let currentPayment = null;
 
-  function openPayment(serviceName, amount) {
-    currentPayment = { serviceName, amount, isCheckout: false };
+  function openPayment(serviceName, amount, serviceId = null) {
+    currentPayment = { serviceName, amount, serviceId, isCheckout: false };
+    void recordUsageEvent('booking_started', serviceId);
     if (!currentUser) {
       const booking = {
         id: `guest-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -1595,6 +1720,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
         currentPayment = null;
         return;
       }
+      void recordUsageEvent('booking_created', serviceId);
       currentPayment.bookingId = booking.id;
       renderBookedServices();
     }
@@ -1761,7 +1887,10 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     supabaseClient.auth.onAuthStateChange((_event, session) => {
       currentUser = session?.user || null;
       renderAuthState();
-      void loadUserBookings();
+      setTimeout(() => {
+        void loadUserBookings();
+        syncAdminAuthState(currentUser);
+      }, 0);
     });
   }
 
@@ -1774,7 +1903,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     }
 
     try {
-      const { error } = await supabaseClient.auth.signInWithPassword({
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
         email: document.getElementById('loginEmail').value.trim(),
         password: document.getElementById('loginPassword').value
       });
@@ -1782,6 +1911,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
         if (message) message.textContent = error.message;
         return;
       }
+      void recordUsageEvent('sign_in', null, data.user?.id || null);
       if (message) message.textContent = 'Signed in successfully.';
       showToast('Welcome back!');
     } catch (error) {
@@ -1806,9 +1936,10 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
         }
       });
       if (error) {
-        if (message) message.textContent = error.message;
+        if (message) message.textContent = getSignupErrorMessage(error);
         return;
       }
+      void recordUsageEvent('sign_up', null, data.user?.id || null);
       if (message) {
         message.textContent = data.session
           ? 'Account created and signed in.'
@@ -1816,8 +1947,20 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       }
       showToast(data.session ? 'Account created!' : 'Check your email to confirm your account.');
     } catch (error) {
-      if (message) message.textContent = `Sign up failed: ${error.message}`;
+      if (message) message.textContent = `Sign up failed: ${getSignupErrorMessage(error)}`;
     }
+  }
+
+  function getSignupErrorMessage(error) {
+    const code = String(error?.code || '').toLowerCase();
+    const errorText = String(error?.message || error || '');
+    if (
+      code === 'over_email_send_rate_limit'
+      || /email.{0,30}rate.?limit|rate.?limit.{0,30}email/i.test(errorText)
+    ) {
+      return (translations[document.documentElement.lang] || translations.en).signupEmailRateLimit;
+    }
+    return errorText || 'Sign-up failed. Please try again.';
   }
 
   function renderBookedServices() {
@@ -1950,6 +2093,8 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
       payment_method: paymentMethod,
       status: 'pending'
     };
+    const userId = currentUser.id;
+    const serviceId = currentPayment.serviceId;
     void supabaseClient.from('bookings').insert(bookingRequest).select().single()
       .then(({ data, error }) => {
         if (error) {
@@ -1957,6 +2102,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
           showToast(`Could not save booking: ${error.message}`);
           return;
         }
+        void recordUsageEvent('booking_created', serviceId, userId);
         bookingsCache.push({
           id: data.id,
           serviceName: data.service_name,
@@ -2148,6 +2294,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     const service = getChatServices().find((item) => item.id === serviceId);
     if (!service) return;
 
+    void recordUsageEvent('service_view', service.id);
     const locale = getChatLocale();
     const pageLocale = translations[document.documentElement.lang] || translations.en;
     const serviceName = getServiceTitle(service, pageLocale);
@@ -2182,7 +2329,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
         .replace('%SERVICE%', serviceName)
         .replace('%PRICE%', service.price), 'user');
       addChatMessage(locale.bookingHelp, 'bot');
-      openPayment(service.bookingName || service.name, service.price);
+      openPayment(service.bookingName || service.name, service.price, service.id);
     } else if (action === 'services') {
       addChatMessage(locale.services, 'user');
       showServiceOptions();
@@ -2308,6 +2455,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     const savedTheme = localStorage.getItem('easyLifeTheme') || 'light';
     const savedLang = localStorage.getItem('easyLifeLang') || 'en';
     initializeServiceCatalog();
+    initializeUsageAnalytics();
     setTheme(savedTheme, false);
     applyTranslations(savedLang);
     updateChatInterface();
@@ -2352,6 +2500,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     document.getElementById('loginForm')?.addEventListener('submit', signIn);
     document.getElementById('signupForm')?.addEventListener('submit', signUp);
     document.getElementById('signOutButton')?.addEventListener('click', async () => {
+      await recordUsageEvent('sign_out');
       const { error } = await supabaseClient.auth.signOut();
       if (error) {
         showToast(`Could not sign out: ${error.message}`);
@@ -2363,6 +2512,11 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     });
 
     document.getElementById('chatForm')?.addEventListener('submit', sendChatMessage);
+    document.getElementById('analyticsAccept')?.addEventListener('click', () => setAnalyticsConsent(true));
+    document.getElementById('analyticsReject')?.addEventListener('click', () => setAnalyticsConsent(false));
+    document.getElementById('privacySettings')?.addEventListener('click', () => {
+      document.getElementById('analyticsConsent')?.removeAttribute('hidden');
+    });
     document.getElementById('chatBody')?.addEventListener('click', (event) => {
       const button = event.target.closest('button[data-chat-action]');
       if (!button) return;
@@ -2376,33 +2530,35 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   <h2 class="section-title"><i class="fas fa-user-shield"></i> Admin Portal</h2>
   <div class="admin-login" id="adminLoginScreen">
     <h2>Admin Login</h2>
-    <p>Sign in to view dashboard activity.</p>
-    <form onsubmit="event.preventDefault(); adminLogin()">
-      <input class="admin-field" type="text" id="adminUser" placeholder="Username" autocomplete="username" required />
+    <p>Sign in with a Supabase account granted the admin role.</p>
+    <form id="adminLoginForm">
+      <input class="admin-field" type="email" id="adminEmail" placeholder="Email" autocomplete="username" required />
       <input class="admin-field" type="password" id="adminPass" placeholder="Password" autocomplete="current-password" required />
       <button type="submit">Login</button>
     </form>
     <div class="admin-error" id="adminLoginError" role="alert"></div>
-    <p class="admin-demo-note">Demo credentials: <b>admin</b> / <b>admin123</b></p>
   </div>
 
   <div class="admin-dashboard" id="adminDashboard">
     <div class="admin-topbar">
       <h2>Dashboard</h2>
-      <button class="admin-logout" type="button" onclick="adminLogout()">Logout</button>
+      <div>
+        <button class="admin-logout" type="button" onclick="loadAdminDashboard()">Refresh</button>
+        <button class="admin-logout" type="button" onclick="adminLogout()">Logout</button>
+      </div>
     </div>
+    <p class="service-message" id="adminDataMessage" role="status" aria-live="polite"></p>
     <div class="admin-stats">
-      <div class="admin-stat"><div class="admin-stat-label">Total Logins</div><div class="admin-stat-value" id="statLogins">0</div></div>
-      <div class="admin-stat"><div class="admin-stat-label">Unique Users</div><div class="admin-stat-value" id="statUsers">0</div></div>
-      <div class="admin-stat"><div class="admin-stat-label">Jobs Purchased</div><div class="admin-stat-value" id="statJobs">0</div></div>
-      <div class="admin-stat"><div class="admin-stat-label">Total Revenue</div><div class="admin-stat-value" id="statRevenue">$0</div></div>
+      <div class="admin-stat"><div class="admin-stat-label">Accounts</div><div class="admin-stat-value" id="statAccounts">0</div></div>
+      <div class="admin-stat"><div class="admin-stat-label">Accounts with a sign-in</div><div class="admin-stat-value" id="statSignIns">0</div></div>
+      <div class="admin-stat"><div class="admin-stat-label">Service bookings</div><div class="admin-stat-value" id="statBookings">0</div></div>
+      <div class="admin-stat"><div class="admin-stat-label">Booking total (unpaid)</div><div class="admin-stat-value" id="statBookingValue">$0</div></div>
     </div>
     <div class="admin-tabs">
-      <button class="admin-tab active" type="button" data-admin-tab="logins" onclick="switchAdminTab('logins')">User Logins</button>
-      <button class="admin-tab" type="button" data-admin-tab="jobs" onclick="switchAdminTab('jobs')">Job Purchases</button>
+      <button class="admin-tab active" type="button" data-admin-tab="users" onclick="switchAdminTab('users')">Accounts</button>
+      <button class="admin-tab" type="button" data-admin-tab="bookings" onclick="switchAdminTab('bookings')">Service Bookings</button>
       <button class="admin-tab" type="button" data-admin-tab="services" onclick="switchAdminTab('services')">Services &amp; Pricing</button>
     </div>
-    <button class="admin-simulate" type="button" onclick="simulateData()">Simulate New Activity</button>
     <input type="search" class="admin-search" id="adminSearchBar" placeholder="Search dashboard..." oninput="renderAdminDashboard()" />
     <div id="adminServicesPanel" hidden>
       <div class="service-editor">
@@ -2435,16 +2591,16 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
         </table>
       </div>
     </div>
-    <div class="admin-table-wrap" id="adminLoginsTable">
+    <div class="admin-table-wrap" id="adminUsersTable">
       <table>
-        <thead><tr><th>#</th><th>Name</th><th>Email</th><th>IP Address</th><th>Device</th><th>Location</th><th>Time</th><th>Status</th></tr></thead>
-        <tbody id="loginsBody"></tbody>
+        <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Account created</th><th>Last sign-in</th></tr></thead>
+        <tbody id="usersBody"></tbody>
       </table>
     </div>
-    <div class="admin-table-wrap" id="adminJobsTable" hidden>
+    <div class="admin-table-wrap" id="adminBookingsTable" hidden>
       <table>
-        <thead><tr><th>#</th><th>Buyer</th><th>Email</th><th>Job Title</th><th>Amount</th><th>Payment</th><th>Date</th><th>Status</th></tr></thead>
-        <tbody id="jobsBody"></tbody>
+        <thead><tr><th>#</th><th>Customer</th><th>Email</th><th>Service</th><th>Amount</th><th>Payment method</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody id="bookingsBody"></tbody>
       </table>
     </div>
   </div>
@@ -2454,58 +2610,83 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 <!-- ⚙️ ADMIN LOGIC                 -->
 <!-- ============================== -->
 <script>
-/* ---------- CONFIG ---------- */
-const ADMIN_CREDENTIALS = { username: "admin", password: "admin123" };
+let adminUsers = [];
+let adminBookings = [];
+let adminLoadRequest = 0;
 
-/* ---------- STORAGE ---------- */
-const DB = {
-  get: (key) => JSON.parse(localStorage.getItem(key) || "[]"),
-  set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
-};
+function isAdminUser(user) {
+  return user?.app_metadata?.role === "admin";
+}
 
-/* ---------- ADMIN LOGIN ---------- */
-function adminLogin() {
-  const u = document.getElementById("adminUser").value.trim();
-  const p = document.getElementById("adminPass").value.trim();
-  const err = document.getElementById("adminLoginError");
-
-  if (u === ADMIN_CREDENTIALS.username && p === ADMIN_CREDENTIALS.password) {
-    sessionStorage.setItem("easyLifeAdminLoggedIn", "true");
-    err.textContent = "";
+function syncAdminAuthState(user) {
+  if (isAdminUser(user)) {
     showDashboard();
-  } else {
-    err.textContent = "❌ Invalid username or password";
+    return;
+  }
+  adminLoadRequest += 1;
+  adminUsers = [];
+  adminBookings = [];
+  document.getElementById("adminDashboard").style.display = "none";
+  document.getElementById("adminLoginScreen").style.display = "block";
+}
+
+async function adminLogin(event) {
+  event.preventDefault();
+  const errorMessage = document.getElementById("adminLoginError");
+  errorMessage.textContent = "";
+  if (!supabaseClient) {
+    errorMessage.textContent = "Supabase is not configured.";
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: document.getElementById("adminEmail").value.trim(),
+      password: document.getElementById("adminPass").value
+    });
+    if (error) {
+      errorMessage.textContent = error.message;
+      return;
+    }
+    if (!isAdminUser(data.user)) {
+      errorMessage.textContent = "This account does not have admin access.";
+      return;
+    }
+    currentUser = data.user;
+    renderAuthState();
+    showDashboard();
+  } catch (error) {
+    errorMessage.textContent = `Admin sign-in failed: ${error.message}`;
   }
 }
 
-function adminLogout() {
-  sessionStorage.removeItem("easyLifeAdminLoggedIn");
-  document.getElementById("adminDashboard").style.display = "none";
-  document.getElementById("adminLoginScreen").style.display = "block";
-  document.getElementById("adminPass").value = "";
+async function adminLogout() {
+  if (!supabaseClient) return;
+  try {
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) {
+      document.getElementById("adminDataMessage").textContent = `Could not sign out: ${error.message}`;
+    }
+  } catch (error) {
+    document.getElementById("adminDataMessage").textContent = `Could not sign out: ${error.message}`;
+  }
 }
 
 function showDashboard() {
+  if (!isAdminUser(currentUser)) return;
   document.getElementById("adminLoginScreen").style.display = "none";
   document.getElementById("adminDashboard").style.display = "block";
-  loadSeedData();
   renderAdminDashboard();
+  void loadAdminDashboard();
 }
-
-/* ---------- AUTO-LOGIN CHECK ---------- */
-window.addEventListener("DOMContentLoaded", () => {
-  if (sessionStorage.getItem("easyLifeAdminLoggedIn") === "true") {
-    showDashboard();
-  }
-});
 
 /* ---------- TABS ---------- */
 function switchAdminTab(tab) {
   document.querySelectorAll("#adminSection .admin-tab").forEach(button => {
     button.classList.toggle("active", button.dataset.adminTab === tab);
   });
-  document.getElementById("adminLoginsTable").hidden = tab !== "logins";
-  document.getElementById("adminJobsTable").hidden = tab !== "jobs";
+  document.getElementById("adminUsersTable").hidden = tab !== "users";
+  document.getElementById("adminBookingsTable").hidden = tab !== "bookings";
   document.getElementById("adminServicesPanel").hidden = tab !== "services";
 }
 
@@ -2582,127 +2763,118 @@ function submitNewService(event) {
   }
 }
 
-/* ---------- SEED DEMO DATA ---------- */
-function loadSeedData() {
-  if (DB.get("logins").length === 0) {
-    DB.set("logins", [
-      { name: "John Doe",    email: "john@mail.com",  ip: "192.168.1.10",  device: "Chrome / Windows", location: "New York, US",   time: new Date(Date.now() - 3600000).toISOString(),  status: "success" },
-      { name: "Sara Khan",   email: "sara@mail.com",  ip: "192.168.1.22",  device: "Safari / iPhone",  location: "London, UK",     time: new Date(Date.now() - 7200000).toISOString(),  status: "success" },
-      { name: "Mike Ross",   email: "mike@mail.com",  ip: "192.168.1.45",  device: "Firefox / Mac",    location: "Toronto, CA",    time: new Date(Date.now() - 10800000).toISOString(), status: "failed"  },
-    ]);
-  }
-  if (DB.get("jobs").length === 0) {
-    DB.set("jobs", [
-      { buyer: "John Doe",  email: "john@mail.com",  title: "Logo Design",       amount: 150, payment: "Credit Card", date: new Date(Date.now() - 3600000).toISOString(),  status: "success" },
-      { buyer: "Sara Khan", email: "sara@mail.com",  title: "Website Redesign",  amount: 800, payment: "PayPal",      date: new Date(Date.now() - 7200000).toISOString(),  status: "success" },
-      { buyer: "Ali Raza",  email: "ali@mail.com",   title: "SEO Optimization",  amount: 300, payment: "Stripe",      date: new Date(Date.now() - 14400000).toISOString(), status: "pending" },
-    ]);
-  }
-}
-
-/* ---------- SIMULATE NEW ACTIVITY ---------- */
-function simulateData() {
-  const names = ["Emma W.", "Liam B.", "Noah K.", "Olivia M.", "Ava P.", "Ethan L."];
-  const jobs  = ["Banner Design", "App Development", "Content Writing", "Video Editing", "Data Entry"];
-  const pays  = ["Credit Card", "PayPal", "Stripe", "Crypto"];
-  const devs  = ["Chrome / Windows", "Safari / iPhone", "Firefox / Mac", "Edge / Windows"];
-  const locs  = ["Berlin, DE", "Paris, FR", "Dubai, AE", "Sydney, AU", "Delhi, IN"];
-
-  const rnd = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  const name = rnd(names);
-  const email = name.toLowerCase().replace(/[^a-z]/g, "") + "@mail.com";
-
-  // Add login
-  const logins = DB.get("logins");
-  logins.unshift({
-    name, email,
-    ip: `192.168.1.${Math.floor(Math.random() * 255)}`,
-    device: rnd(devs), location: rnd(locs),
-    time: new Date().toISOString(),
-    status: Math.random() > 0.15 ? "success" : "failed",
-  });
-  DB.set("logins", logins);
-
-  // 60% chance they also bought a job
-  if (Math.random() > 0.4) {
-    const jobsArr = DB.get("jobs");
-    jobsArr.unshift({
-      buyer: name, email,
-      title: rnd(jobs),
-      amount: Math.floor(Math.random() * 900) + 50,
-      payment: rnd(pays),
-      date: new Date().toISOString(),
-      status: Math.random() > 0.25 ? "success" : "pending",
-    });
-    DB.set("jobs", jobsArr);
-  }
-
-  renderAdminDashboard();
-}
-
-/* ---------- RENDER EVERYTHING ---------- */
 function escapeAdminHtml(value) {
   return String(value).replace(/[&<>"']/g, char => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   })[char]);
 }
 
+async function loadAdminDashboard() {
+  const message = document.getElementById("adminDataMessage");
+  if (!isAdminUser(currentUser) || !supabaseClient) return;
+
+  const requestId = ++adminLoadRequest;
+  message.textContent = "Loading account and booking data…";
+  try {
+    const [usersResult, bookingsResult] = await Promise.all([
+      supabaseClient
+        .from("profiles")
+        .select("id, email, full_name, created_at, last_sign_in_at")
+        .order("created_at", { ascending: false }),
+      supabaseClient
+        .from("bookings")
+        .select("id, user_id, service_name, amount, payment_method, status, created_at")
+        .order("created_at", { ascending: false })
+    ]);
+    if (requestId !== adminLoadRequest) return;
+    if (usersResult.error || bookingsResult.error) {
+      throw new Error(usersResult.error?.message || bookingsResult.error?.message);
+    }
+
+    adminUsers = usersResult.data;
+    adminBookings = bookingsResult.data;
+    renderAdminDashboard();
+    message.textContent = `Loaded ${adminUsers.length} account(s) and ${adminBookings.length} booking(s).`;
+  } catch (error) {
+    if (requestId !== adminLoadRequest) return;
+    adminUsers = [];
+    adminBookings = [];
+    renderAdminDashboard();
+    message.textContent = `Could not load admin data: ${error.message}`;
+  }
+}
+
 function renderAdminDashboard() {
-  const query = document.getElementById("adminSearchBar").value.toLowerCase();
-
-  const logins = DB.get("logins").filter(l =>
-    !query || [l.name, l.email, l.ip, l.device, l.location].join(" ").toLowerCase().includes(query)
+  const query = document.getElementById("adminSearchBar").value.trim().toLowerCase();
+  const users = adminUsers.filter((user) =>
+    !query || [user.full_name, user.email].join(" ").toLowerCase().includes(query)
   );
+  const usersById = new Map(adminUsers.map((user) => [user.id, user]));
+  const bookings = adminBookings.filter((booking) => {
+    const user = usersById.get(booking.user_id);
+    return !query || [user?.full_name, user?.email, booking.service_name, booking.payment_method, booking.status]
+      .join(" ").toLowerCase().includes(query);
+  });
 
-  const jobs = DB.get("jobs").filter(j =>
-    !query || [j.buyer, j.email, j.title, j.payment].join(" ").toLowerCase().includes(query)
-  );
-
-  // Logins table
-  document.getElementById("loginsBody").innerHTML = logins.length
-    ? logins.map((l, i) => `
+  document.getElementById("usersBody").innerHTML = users.length
+    ? users.map((user, index) => `
       <tr>
-        <td>${i + 1}</td>
-        <td>${escapeAdminHtml(l.name)}</td>
-        <td>${escapeAdminHtml(l.email)}</td>
-        <td>${escapeAdminHtml(l.ip)}</td>
-        <td>${escapeAdminHtml(l.device)}</td>
-        <td>${escapeAdminHtml(l.location)}</td>
-        <td>${new Date(l.time).toLocaleString()}</td>
-        <td><span class="admin-badge ${escapeAdminHtml(l.status)}">${escapeAdminHtml(l.status)}</span></td>
+        <td>${index + 1}</td>
+        <td>${escapeAdminHtml(user.full_name || "—")}</td>
+        <td>${escapeAdminHtml(user.email || "—")}</td>
+        <td>${user.created_at ? new Date(user.created_at).toLocaleString() : "—"}</td>
+        <td>${user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : "Never"}</td>
       </tr>`).join("")
-    : `<tr><td colspan="8" class="admin-empty">No logins found</td></tr>`;
+    : `<tr><td colspan="5" class="admin-empty">No accounts found</td></tr>`;
 
-  // Jobs table
-  document.getElementById("jobsBody").innerHTML = jobs.length
-    ? jobs.map((j, i) => `
+  document.getElementById("bookingsBody").innerHTML = bookings.length
+    ? bookings.map((booking, index) => {
+      const user = usersById.get(booking.user_id);
+      return `
       <tr>
-        <td>${i + 1}</td>
-        <td>${escapeAdminHtml(j.buyer)}</td>
-        <td>${escapeAdminHtml(j.email)}</td>
-        <td>${escapeAdminHtml(j.title)}</td>
-        <td>$${j.amount}</td>
-        <td>${escapeAdminHtml(j.payment)}</td>
-        <td>${new Date(j.date).toLocaleString()}</td>
-        <td><span class="admin-badge ${escapeAdminHtml(j.status)}">${escapeAdminHtml(j.status)}</span></td>
-      </tr>`).join("")
-    : `<tr><td colspan="8" class="admin-empty">No jobs found</td></tr>`;
+        <td>${index + 1}</td>
+        <td>${escapeAdminHtml(user?.full_name || "Account unavailable")}</td>
+        <td>${escapeAdminHtml(user?.email || "—")}</td>
+        <td>${escapeAdminHtml(booking.service_name)}</td>
+        <td>$${Number(booking.amount).toLocaleString()}</td>
+        <td>${escapeAdminHtml(booking.payment_method)}</td>
+        <td><span class="admin-badge ${escapeAdminHtml(booking.status)}">${escapeAdminHtml(booking.status)}</span></td>
+        <td>${booking.created_at ? new Date(booking.created_at).toLocaleString() : "—"}</td>
+      </tr>`;
+    }).join("")
+    : `<tr><td colspan="8" class="admin-empty">No bookings found</td></tr>`;
 
-  // Stats
-  const allLogins = DB.get("logins");
-  const allJobs   = DB.get("jobs");
-  document.getElementById("statLogins").textContent  = allLogins.length;
-  document.getElementById("statUsers").textContent   = new Set(allLogins.map(l => l.email)).size;
-  document.getElementById("statJobs").textContent    = allJobs.length;
-  document.getElementById("statRevenue").textContent = "$" + allJobs
-    .filter(j => j.status === "success")
-    .reduce((sum, j) => sum + j.amount, 0);
+  document.getElementById("statAccounts").textContent = adminUsers.length;
+  document.getElementById("statSignIns").textContent = adminUsers.filter((user) => user.last_sign_in_at).length;
+  document.getElementById("statBookings").textContent = adminBookings.length;
+  document.getElementById("statBookingValue").textContent = "$" + adminBookings
+    .reduce((sum, booking) => sum + (Number(booking.amount) || 0), 0).toLocaleString();
   renderAdminServices(query);
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+  try {
+    localStorage.removeItem("logins");
+    localStorage.removeItem("jobs");
+    sessionStorage.removeItem("easyLifeAdminLoggedIn");
+  } catch (error) {
+    console.error("Unable to remove legacy demo admin data:", error);
+  }
+  document.getElementById("adminLoginForm")?.addEventListener("submit", adminLogin);
+  syncAdminAuthState(currentUser);
+});
 </script>
 <div class="footer-note" data-i18n="footerNote">© 2026 EasyLife. Trusted home services for every day life.</div>
+<button class="privacy-settings" id="privacySettings" type="button" data-i18n="privacySettings">Privacy settings</button>
 </div>
-<template id="supabase-bookings-schema">
+<aside class="analytics-consent" id="analyticsConsent" aria-label="Analytics consent" aria-live="polite" hidden>
+  <p data-i18n="analyticsConsentText">Allow privacy-friendly analytics? If you accept, EasyLife records page visits and key actions (service views, booking starts, and sign-ins) in Supabase using a temporary browser session ID. Account and booking events may include your Supabase user ID. We do not collect IP addresses, names, email addresses, or form/chat contents.</p>
+  <div class="analytics-consent-actions">
+    <button id="analyticsReject" type="button" data-i18n="analyticsReject">Reject</button>
+    <button id="analyticsAccept" type="button" data-i18n="analyticsAccept">Accept analytics</button>
+  </div>
+</aside>
+<template id="supabase-setup-sql">
 create table if not exists public.bookings (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
@@ -2727,6 +2899,134 @@ create policy "Users can create their own bookings"
   on public.bookings for insert
   to authenticated
   with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Admins can read all bookings" on public.bookings;
+create policy "Admins can read all bookings"
+  on public.bookings for select
+  to authenticated
+  using ((select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+create table if not exists public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  email text,
+  full_name text not null default '',
+  last_sign_in_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.profiles
+  add column if not exists email text,
+  add column if not exists full_name text not null default '',
+  add column if not exists last_sign_in_at timestamptz,
+  add column if not exists created_at timestamptz not null default now(),
+  add column if not exists updated_at timestamptz not null default now();
+
+alter table public.profiles enable row level security;
+revoke all on public.profiles from public, anon, authenticated;
+grant select on public.profiles to authenticated;
+
+drop policy if exists "Users can read their own profile" on public.profiles;
+create policy "Users can read their own profile"
+  on public.profiles for select
+  to authenticated
+  using ((select auth.uid()) = id);
+
+drop policy if exists "Admins can read all profiles" on public.profiles;
+create policy "Admins can read all profiles"
+  on public.profiles for select
+  to authenticated
+  using ((select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+create or replace function public.sync_profile_from_auth_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.profiles (id, email, full_name, last_sign_in_at, created_at, updated_at)
+  values (
+    new.id,
+    new.email,
+    coalesce(nullif(btrim(new.raw_user_meta_data ->> 'full_name'), ''), ''),
+    new.last_sign_in_at,
+    new.created_at,
+    now()
+  )
+  on conflict (id) do update set
+    email = excluded.email,
+    full_name = excluded.full_name,
+    last_sign_in_at = excluded.last_sign_in_at,
+    updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists sync_profile_from_auth_user on auth.users;
+drop trigger if exists sync_profile_from_auth_user_insert on auth.users;
+drop trigger if exists sync_profile_from_auth_user_update on auth.users;
+create trigger sync_profile_from_auth_user_insert
+  after insert on auth.users
+  for each row execute function public.sync_profile_from_auth_user();
+create trigger sync_profile_from_auth_user_update
+  after update of email, raw_user_meta_data, last_sign_in_at on auth.users
+  for each row execute function public.sync_profile_from_auth_user();
+
+insert into public.profiles (id, email, full_name, last_sign_in_at, created_at, updated_at)
+select
+  id,
+  email,
+  coalesce(nullif(btrim(raw_user_meta_data ->> 'full_name'), ''), ''),
+  last_sign_in_at,
+  created_at,
+  now()
+from auth.users
+on conflict (id) do update set
+  email = excluded.email,
+  full_name = excluded.full_name,
+  last_sign_in_at = excluded.last_sign_in_at,
+  updated_at = now();
+
+create table if not exists public.usage_events (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null,
+  user_id uuid references auth.users (id) on delete set null,
+  event_name text not null check (event_name in (
+    'page_view',
+    'service_view',
+    'booking_started',
+    'booking_created',
+    'sign_in',
+    'sign_up',
+    'sign_out'
+  )),
+  page_path text not null default '/' check (length(page_path) <= 200),
+  entity_id text check (entity_id is null or length(entity_id) <= 100),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists usage_events_created_at_idx
+  on public.usage_events (created_at desc);
+create index if not exists usage_events_session_id_idx
+  on public.usage_events (session_id);
+
+alter table public.usage_events enable row level security;
+revoke all on public.usage_events from public, anon, authenticated;
+grant insert on public.usage_events to anon, authenticated;
+grant select on public.usage_events to authenticated;
+
+drop policy if exists "Visitors can record consented usage events" on public.usage_events;
+create policy "Visitors can record consented usage events"
+  on public.usage_events for insert
+  to anon, authenticated
+  with check (user_id is null or (select auth.uid()) = user_id);
+
+drop policy if exists "Admins can read usage events" on public.usage_events;
+create policy "Admins can read usage events"
+  on public.usage_events for select
+  to authenticated
+  using ((select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 </template>
 </body>
 </html>
